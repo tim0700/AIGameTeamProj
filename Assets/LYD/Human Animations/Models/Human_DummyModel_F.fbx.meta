@@ -1,5 +1,12 @@
 fileFormatVersion: 2
 guid: 1841c298173cdad4db8df8602c8f1c8d
+AssetOrigin:
+  serializedVersion: 1
+  productId: 165785
+  packageName: Human Melee Animations FREE
+  packageVersion: 2.0.1
+  assetPath: Assets/Kevin Iglesias/Human Animations/Models/Human_DummyModel_F.fbx
+  uploadId: 756482
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -16,8 +23,6 @@ ModelImporter:
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -818,10 +823,3 @@ ModelImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 165785
-  packageName: Human Melee Animations FREE
-  packageVersion: 2.0.1
-  assetPath: Assets/Kevin Iglesias/Human Animations/Models/Human_DummyModel_F.fbx
-  uploadId: 756482
