@@ -1,0 +1,47 @@
+{
+    "name": "root",
+    "metadata": {
+        "timer_format_version": "0.1.0",
+        "start_time_seconds": "1747885993",
+        "python_version": "3.9.13 (tags/v3.9.13:6de2ca5, May 17 2022, 16:36:42) [MSC v.1929 64 bit (AMD64)]",
+        "command_line_arguments": "C:\\Users\\FEELCOM\\Desktop\\AIGameProject\\venv\\Scripts\\mlagents-learn configs/ikj_attack_config.yaml --run-id=ikj_bt_attack_01 --env=NONE --force",
+        "mlagents_version": "0.30.0",
+        "mlagents_envs_version": "0.30.0",
+        "communication_protocol_version": "1.5.0",
+        "pytorch_version": "2.7.0+cpu",
+        "numpy_version": "1.21.2",
+        "end_time_seconds": "1747886000"
+    },
+    "total": 7.3708846999999995,
+    "count": 1,
+    "self": 0.014483899999998329,
+    "children": {
+        "run_training.setup": {
+            "total": 0.31976219999999955,
+            "count": 1,
+            "self": 0.31976219999999955
+        },
+        "TrainerController.start_learning": {
+            "total": 7.036638600000002,
+            "count": 1,
+            "self": 0.0008344000000022334,
+            "children": {
+                "TrainerController._reset_env": {
+                    "total": 7.0357824,
+                    "count": 1,
+                    "self": 7.0357824
+                },
+                "trainer_threads": {
+                    "total": 1.8999999991109462e-06,
+                    "count": 1,
+                    "self": 1.8999999991109462e-06
+                },
+                "TrainerController._save_models": {
+                    "total": 1.9899999999850593e-05,
+                    "count": 1,
+                    "self": 1.9899999999850593e-05
+                }
+            }
+        }
+    }
+}
