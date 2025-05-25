@@ -1,0 +1,65 @@
+{
+    "IKJ_AttackAgent": {
+        "checkpoints": [
+            {
+                "steps": 89960,
+                "file_path": "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-89960.onnx",
+                "reward": -30.499998569488525,
+                "creation_time": 1748052980.7480607,
+                "auxillary_file_paths": [
+                    "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-89960.pt"
+                ]
+            },
+            {
+                "steps": 99960,
+                "file_path": "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-99960.onnx",
+                "reward": null,
+                "creation_time": 1748053066.9744353,
+                "auxillary_file_paths": [
+                    "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-99960.pt"
+                ]
+            },
+            {
+                "steps": 100064,
+                "file_path": "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-100064.onnx",
+                "reward": -26.17499828338623,
+                "creation_time": 1748053067.5845964,
+                "auxillary_file_paths": [
+                    "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-100064.pt"
+                ]
+            },
+            {
+                "steps": 100064,
+                "file_path": "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-100064.onnx",
+                "reward": null,
+                "creation_time": 1748053761.556643,
+                "auxillary_file_paths": [
+                    "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-100064.pt"
+                ]
+            },
+            {
+                "steps": 100064,
+                "file_path": "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-100064.onnx",
+                "reward": null,
+                "creation_time": 1748053816.2838283,
+                "auxillary_file_paths": [
+                    "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-100064.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 100064,
+            "file_path": "results\\ikj_bt_attack_08\\IKJ_AttackAgent.onnx",
+            "reward": null,
+            "creation_time": 1748053816.2838283,
+            "auxillary_file_paths": [
+                "results\\ikj_bt_attack_08\\IKJ_AttackAgent\\IKJ_AttackAgent-100064.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "0.30.0",
+        "torch_version": "2.7.0+cpu"
+    }
+}
