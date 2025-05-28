@@ -50,14 +50,14 @@ public class PlayerController : MonoBehaviour
         bool a = Input.GetKey(KeyCode.A);
         bool d = Input.GetKey(KeyCode.D);
 
-        if (w && d && !a && !s) return 1; // FrontRight
-        if (w && a && !d && !s) return 7; // FrontLeft
-        if (s && d && !w && !a) return 3; // BackRight
-        if (s && a && !w && !d) return 5; // BackLeft
         if (w && !a && !d && !s) return 0; // Front
-        if (s && !a && !d && !w) return 4; // Back
+        if (w && d && !a && !s) return 1; // FrontRight
         if (d && !w && !s && !a) return 2; // Right
+        if (s && d && !w && !a) return 3; // BackRight
+        if (s && !a && !d && !w) return 4; // Back
+        if (s && a && !w && !d) return 5; // BackLeft
         if (a && !w && !s && !d) return 6; // Left
+        if (w && a && !d && !s) return 7; // FrontLeft
 
         // 대각선 우선, 중복/입력없음은 Idle(-1)
         return -1;
