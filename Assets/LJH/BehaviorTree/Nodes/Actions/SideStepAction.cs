@@ -45,11 +45,11 @@ namespace BehaviorTree
             }
 
             // Set animation parameters if needed
-            if (btAgent.animator != null)
+            if (btAgent.Animator != null)
             {
-                btAgent.animator.SetFloat("MoveSpeed", 1.0f);
-                btAgent.animator.SetFloat("MoveX", sideDirection.x);
-                btAgent.animator.SetFloat("MoveZ", sideDirection.z);
+                btAgent.Animator.SetFloat("MoveSpeed", 1.0f);
+                btAgent.Animator.SetFloat("MoveX", sideDirection.x);
+                btAgent.Animator.SetFloat("MoveZ", sideDirection.z);
             }
 
             state = NodeState.RUNNING;

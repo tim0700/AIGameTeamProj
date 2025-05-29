@@ -27,7 +27,7 @@ namespace BehaviorTree
             
             if (distance <= range)
             {
-                btAgent.enemy = enemy;
+                btAgent.Enemy = enemy;
                 SetData("enemy", enemy);
                 state = NodeState.SUCCESS;
             }

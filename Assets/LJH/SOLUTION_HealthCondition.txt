@@ -1,0 +1,73 @@
+# Final Solution for HealthBelowThresholdCondition Error
+
+## Quick Solution
+
+The error occurs because Unity hasn't properly imported the `HealthBelowThresholdCondition.cs` file. Here's the fastest fix:
+
+### In Unity Editor:
+
+1. **Right-click** on the folder: `Assets/LJH/BehaviorTree/Nodes/Conditions`
+2. Select **"Reimport"**
+3. Wait for Unity to finish (check the progress bar at bottom)
+4. The error should disappear
+
+## Alternative Solutions (if above doesn't work)
+
+### Option 1: Use the Menu Tool
+- Go to Unity menu: **BehaviorTree > Fix Import Issues**
+- This will force reimport all BehaviorTree scripts
+
+### Option 2: Manual Asset Refresh
+- Press **Ctrl+R** (or Cmd+R on Mac) in Unity
+- Or go to **Assets > Refresh**
+
+### Option 3: Full Project Reimport
+1. Right-click on `Assets/LJH` folder
+2. Select **"Reimport All"**
+3. Wait for completion (this takes longer but is thorough)
+
+## Why This Happens
+
+Unity sometimes fails to recognize new scripts when:
+- Files are created while Unity is in Safe Mode
+- Files are created outside Unity (via external editors)
+- Script compilation order gets confused
+- The asset database cache is outdated
+
+## File Location Verification
+
+The file exists at:
+```
+Assets/LJH/BehaviorTree/Nodes/Conditions/HealthBelowThresholdCondition.cs
+```
+
+You can verify this by:
+1. Opening the Project window in Unity
+2. Navigating to: LJH > BehaviorTree > Nodes > Conditions
+3. You should see `HealthBelowThresholdCondition` listed
+
+## What the File Does
+
+`HealthBelowThresholdCondition` is a condition node that:
+- Checks if the agent's health is below a specified percentage
+- Returns SUCCESS if health is below threshold
+- Returns FAILURE if health is above threshold
+- Used by OffensiveAgent for emergency retreat behavior
+
+## If Nothing Works
+
+As a last resort:
+1. Close Unity completely
+2. Delete the `Library` folder in your project root (Unity will rebuild it)
+3. Reopen Unity
+4. Unity will reimport all assets (this takes time but fixes most issues)
+
+## Prevention Tips
+
+To avoid this in the future:
+- Always create new scripts using Unity's "Create > C# Script" menu
+- Exit Safe Mode before adding new scripts
+- Use version control to track file changes
+- Regularly refresh the asset database (Ctrl+R)
+
+The script is properly written and should work once Unity recognizes it. This is purely an import/compilation issue, not a code problem.

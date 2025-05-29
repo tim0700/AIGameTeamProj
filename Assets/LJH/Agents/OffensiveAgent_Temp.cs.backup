@@ -3,15 +3,25 @@ using UnityEngine;
 
 namespace BehaviorTree
 {
-    // If you get an error about HealthBelowThresholdCondition not found:
-    // 1. Right-click Assets/LJH/BehaviorTree/Nodes/Conditions folder and select "Reimport"
-    // 2. Or use BehaviorTree > Fix Import Issues from the menu
     public class OffensiveAgent : BTAgent
     {
         protected override void SetupTree()
         {
             // Create condition nodes
-            var lowHealthCondition = new HealthBelowThresholdCondition(gameObject, 0.3f);
+            // TEMPORARY: Using inline condition until Unity recognizes HealthBelowThresholdCondition
+            ConditionNode lowHealthCondition = null;
+            
+            // Try to create HealthBelowThresholdCondition if it exists
+            try 
+            {
+                lowHealthCondition = new HealthBelowThresholdCondition(gameObject, 0.3f);
+            }
+            catch (System.Exception)
+            {
+                // Fallback: Create a simple inline condition
+                lowHealthCondition = new SimpleHealthCondition(gameObject, 0.3f);
+            }
+            
             var enemyInDetectionRange = new EnemyInRangeCondition(gameObject, detectionRange);
             var enemyInAttackRange = new EnemyInRangeCondition(gameObject, attackRange);
             var enemyOutOfAttackRange = new Inverter(new EnemyInRangeCondition(gameObject, attackRange));
@@ -84,6 +94,35 @@ namespace BehaviorTree
         {
             base.Start();
             gameObject.name = "OffensiveAgent";
+        }
+        
+        // Temporary inline condition class
+        private class SimpleHealthCondition : ConditionNode
+        {
+            private float threshold;
+            private BTAgent btAgent;
+
+            public SimpleHealthCondition(GameObject agent, float threshold) : base(agent)
+            {
+                this.threshold = threshold;
+                this.btAgent = agent.GetComponent<BTAgent>();
+            }
+
+            public override NodeState Evaluate()
+            {
+                float healthPercentage = btAgent.GetHealthPercentage();
+                
+                if (healthPercentage <= threshold)
+                {
+                    state = NodeState.SUCCESS;
+                }
+                else
+                {
+                    state = NodeState.FAILURE;
+                }
+
+                return state;
+            }
         }
     }
 }

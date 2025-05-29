@@ -56,9 +56,9 @@ namespace BehaviorTree
             agent.transform.position += evasionDirection * evasionDistance;
 
             // Trigger evasion animation
-            if (btAgent.animator != null)
+            if (btAgent.Animator != null)
             {
-                btAgent.animator.SetTrigger("Evasion");
+                btAgent.Animator.SetTrigger("Evasion");
             }
 
             Debug.Log($"{agent.name} evades!");

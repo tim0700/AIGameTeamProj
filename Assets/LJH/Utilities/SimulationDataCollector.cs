@@ -32,7 +32,7 @@ namespace BehaviorTree
             {
                 if (instance == null)
                 {
-                    instance = FindObjectOfType<SimulationDataCollector>();
+                    instance = FindFirstObjectByType<SimulationDataCollector>();
                     if (instance == null)
                     {
                         GameObject go = new GameObject("SimulationDataCollector");
@@ -67,7 +67,7 @@ namespace BehaviorTree
         void Start()
         {
             // Find all BT agents and start tracking
-            BTAgent[] agents = FindObjectsOfType<BTAgent>();
+            BTAgent[] agents = FindObjectsByType<BTAgent>(FindObjectsSortMode.None);
             foreach (BTAgent agent in agents)
             {
                 StartTrackingAgent(agent);
@@ -165,7 +165,7 @@ namespace BehaviorTree
             }
 
             // Check for combat end
-            BTAgent[] activeAgents = FindObjectsOfType<BTAgent>();
+            BTAgent[] activeAgents = FindObjectsByType<BTAgent>(FindObjectsSortMode.None);
             int aliveCount = 0;
             BTAgent winner = null;
 
@@ -252,7 +252,7 @@ namespace BehaviorTree
             combatStartTime = Time.time;
             combatActive = true;
             
-            BTAgent[] agents = FindObjectsOfType<BTAgent>();
+            BTAgent[] agents = FindObjectsByType<BTAgent>(FindObjectsSortMode.None);
             foreach (BTAgent agent in agents)
             {
                 StartTrackingAgent(agent);

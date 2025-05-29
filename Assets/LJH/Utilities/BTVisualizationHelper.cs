@@ -26,14 +26,14 @@ namespace BehaviorTree
         void Start()
         {
             // Find all agents in scene
-            agents = FindObjectsOfType<BTAgent>();
+            agents = FindObjectsByType<BTAgent>(FindObjectsSortMode.None);
         }
         
         void OnDrawGizmos()
         {
             if (agents == null || agents.Length == 0)
             {
-                agents = FindObjectsOfType<BTAgent>();
+                agents = FindObjectsByType<BTAgent>(FindObjectsSortMode.None);
             }
             
             foreach (BTAgent agent in agents)

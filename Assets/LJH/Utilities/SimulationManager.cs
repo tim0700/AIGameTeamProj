@@ -83,7 +83,7 @@ namespace BehaviorTree
                 }
                 
                 // Check if only one agent remains
-                BTAgent[] agents = FindObjectsOfType<BTAgent>();
+                BTAgent[] agents = FindObjectsByType<BTAgent>(FindObjectsSortMode.None);
                 int aliveCount = 0;
                 
                 foreach (BTAgent agent in agents)
@@ -116,7 +116,7 @@ namespace BehaviorTree
             yield return new WaitForSeconds(2f);
             
             // Clean up agents
-            BTAgent[] agents = FindObjectsOfType<BTAgent>();
+            BTAgent[] agents = FindObjectsByType<BTAgent>(FindObjectsSortMode.None);
             foreach (BTAgent agent in agents)
             {
                 Destroy(agent.gameObject);

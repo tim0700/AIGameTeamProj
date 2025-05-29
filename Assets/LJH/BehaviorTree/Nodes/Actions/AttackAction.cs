@@ -44,9 +44,9 @@ namespace BehaviorTree
             }
 
             // Trigger attack animation
-            if (btAgent.animator != null)
+            if (btAgent.Animator != null)
             {
-                btAgent.animator.SetTrigger("Attack");
+                btAgent.Animator.SetTrigger("Attack");
             }
 
             // Deal damage to enemy if in range

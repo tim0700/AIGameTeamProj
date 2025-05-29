@@ -35,6 +35,14 @@ namespace BehaviorTree
         protected GameObject enemy;
         protected Animator animator;
         protected Rigidbody rb;
+        
+        // Public properties for external access
+        public Animator Animator => animator;
+        public GameObject Enemy 
+        { 
+            get => enemy; 
+            set => enemy = value; 
+        }
 
         // Movement
         protected Vector3 moveDirection;
@@ -121,7 +129,7 @@ namespace BehaviorTree
         public GameObject FindEnemy()
         {
             // Find the closest enemy agent
-            BTAgent[] allAgents = FindObjectsOfType<BTAgent>();
+            BTAgent[] allAgents = FindObjectsByType<BTAgent>(FindObjectsSortMode.None);
             GameObject closestEnemy = null;
             float closestDistance = float.MaxValue;
 

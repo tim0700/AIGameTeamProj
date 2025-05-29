@@ -30,9 +30,9 @@ namespace BehaviorTree
             }
 
             // Trigger defense animation
-            if (btAgent.animator != null)
+            if (btAgent.Animator != null)
             {
-                btAgent.animator.SetTrigger("Defense");
+                btAgent.Animator.SetTrigger("Defense");
             }
 
             Debug.Log($"{agent.name} defends!");
