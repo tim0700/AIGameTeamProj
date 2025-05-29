@@ -23,6 +23,8 @@ namespace BehaviorTree
         [Header("Detection")]
         public float detectionRange = 10f;
         public LayerMask enemyLayer = 1;
+        public LayerMask obstacleLayer = 1 << 8; // Default to layer 8 for obstacles
+        public float obstacleDetectionDistance = 1.5f;
 
         // 컴포넌트들
         private Rigidbody rb;
@@ -98,7 +100,17 @@ namespace BehaviorTree
                 return;
             }
 
-            Vector3 moveVec = constrainedDirection * moveSpeed;
+            // 장애물 감지 및 회피
+            Vector3 finalDirection = GetSmartMovementDirection(constrainedDirection);
+            if (finalDirection == Vector3.zero)
+            {
+                rb.velocity = new Vector3(0, rb.velocity.y, 0);
+                if (animator != null)
+                    animator.SetBool("IsMoving", false);
+                return;
+            }
+
+            Vector3 moveVec = finalDirection * moveSpeed;
             rb.velocity = new Vector3(moveVec.x, rb.velocity.y, moveVec.z);
 
             // 애니메이션 (Animator가 있을 때만)
@@ -107,7 +119,7 @@ namespace BehaviorTree
                 animator.SetBool("IsMoving", true);
             }
 
-            LookAtDirection(constrainedDirection);
+            LookAtDirection(finalDirection);
         }
         
         // 4방향으로 제한하는 함수
@@ -135,6 +147,90 @@ namespace BehaviorTree
                 Quaternion targetRotation = Quaternion.LookRotation(direction);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }
+        }
+        
+        // 장애물을 피한 스마트한 이동 방향 결정
+        private Vector3 GetSmartMovementDirection(Vector3 desiredDirection)
+        {
+            // 원하는 방향에 장애물이 있는지 확인
+            if (!IsObstacleInDirection(desiredDirection))
+            {
+                return desiredDirection;
+            }
+            
+            // 장애물이 있다면 대체 경로 찾기
+            Vector3[] alternativeDirections = GetAlternativeDirections(desiredDirection);
+            
+            foreach (Vector3 altDirection in alternativeDirections)
+            {
+                if (!IsObstacleInDirection(altDirection))
+                {
+                    Debug.Log($"{gameObject.name}: Obstacle detected, moving {altDirection} instead");
+                    return altDirection;
+                }
+            }
+            
+            // 모든 방향이 막혀있으면 정지
+            Debug.Log($"{gameObject.name}: All directions blocked!");
+            return Vector3.zero;
+        }
+        
+        // 특정 방향에 장애물이 있는지 확인
+        private bool IsObstacleInDirection(Vector3 direction)
+        {
+            if (direction == Vector3.zero) return false;
+            
+            // Raycast로 장애물 감지
+            Vector3 origin = transform.position + Vector3.up * 0.5f; // 중심점을 약간 높임
+            RaycastHit hit;
+            
+            if (Physics.Raycast(origin, direction, out hit, obstacleDetectionDistance, obstacleLayer))
+            {
+                return true;
+            }
+            
+            // 추가로 BoxCast로 더 넓은 영역 체크
+            Vector3 boxSize = new Vector3(0.5f, 1f, 0.5f);
+            if (Physics.BoxCast(origin, boxSize * 0.5f, direction, out hit, transform.rotation, obstacleDetectionDistance, obstacleLayer))
+            {
+                return true;
+            }
+            
+            return false;
+        }
+        
+        // 대체 이동 방향 찾기
+        private Vector3[] GetAlternativeDirections(Vector3 blockedDirection)
+        {
+            Vector3[] alternatives = new Vector3[3];
+            
+            if (blockedDirection == Vector3.forward || blockedDirection == Vector3.back)
+            {
+                // 전/후 방향이 막혔으면 좌/우 시도
+                alternatives[0] = Vector3.right;
+                alternatives[1] = Vector3.left;
+                alternatives[2] = -blockedDirection; // 반대 방향
+            }
+            else // left or right blocked
+            {
+                // 좌/우 방향이 막혔으면 전/후 시도
+                alternatives[0] = Vector3.forward;
+                alternatives[1] = Vector3.back;
+                alternatives[2] = -blockedDirection; // 반대 방향
+            }
+            
+            // 타겟과의 거리를 고려하여 우선순위 정렬
+            if (currentTarget != null)
+            {
+                System.Array.Sort(alternatives, (a, b) => 
+                {
+                    float distA = Vector3.Distance(transform.position + a * 2f, currentTarget.position);
+                    float distB = Vector3.Distance(transform.position + b * 2f, currentTarget.position);
+                    return distA.CompareTo(distB);
+                });
+            }
+            
+            return alternatives;
         }
 
         public void LookAtTarget(Transform target)
@@ -448,11 +544,27 @@ namespace BehaviorTree
         {
             // 공격 범위
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position + transform.forward * attackRange/2, attackRange/2);
+            Gizmos.DrawWireSphere(transform.position, attackRange);
             
             // 감지 범위
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(transform.position, detectionRange);
+            
+            // 장애물 감지 범위
+            Gizmos.color = Color.cyan;
+            Vector3 origin = transform.position + Vector3.up * 0.5f;
+            
+            // 4방향 장애물 감지 레이
+            Vector3[] directions = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
+            foreach (Vector3 dir in directions)
+            {
+                Gizmos.DrawRay(origin, dir * obstacleDetectionDistance);
+            }
+            
+            // 박스 감지 영역
+            Gizmos.color = new Color(0, 1, 1, 0.3f);
+            Vector3 boxSize = new Vector3(0.5f, 1f, 0.5f);
+            Gizmos.DrawCube(transform.position + transform.forward * obstacleDetectionDistance * 0.5f, boxSize);
         }
     }
 }

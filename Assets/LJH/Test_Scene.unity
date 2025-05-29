@@ -131,9 +131,9 @@ GameObject:
   - component: {fileID: 19377341}
   - component: {fileID: 19377340}
   - component: {fileID: 19377339}
-  m_Layer: 0
-  m_Name: Cube
-  m_TagString: Untagged
+  m_Layer: 10
+  m_Name: Border_Cube
+  m_TagString: Border
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -393,9 +393,9 @@ GameObject:
   - component: {fileID: 1458269999}
   - component: {fileID: 1458269998}
   - component: {fileID: 1458269997}
-  m_Layer: 0
-  m_Name: Cube (3)
-  m_TagString: Untagged
+  m_Layer: 10
+  m_Name: Border_Cube (3)
+  m_TagString: Border
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -500,9 +500,9 @@ GameObject:
   - component: {fileID: 1482513913}
   - component: {fileID: 1482513912}
   - component: {fileID: 1482513911}
-  m_Layer: 0
-  m_Name: Cube (1)
-  m_TagString: Untagged
+  m_Layer: 10
+  m_Name: Border_Cube (1)
+  m_TagString: Border
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -685,9 +685,9 @@ GameObject:
   - component: {fileID: 1575958622}
   - component: {fileID: 1575958621}
   - component: {fileID: 1575958620}
-  m_Layer: 0
-  m_Name: Cube (2)
-  m_TagString: Untagged
+  m_Layer: 10
+  m_Name: Border_Cube (2)
+  m_TagString: Border
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

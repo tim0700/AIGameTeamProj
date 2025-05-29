@@ -6,6 +6,8 @@ namespace BehaviorTree.Nodes
     public class MoveToTarget : ActionNode
     {
         private float acceptableDistance;
+        private float lastTargetCheckTime;
+        private Vector3 lastTargetPosition;
 
         public MoveToTarget(Agent agent, float distance = 2f) : base(agent)
         {
@@ -29,7 +31,22 @@ namespace BehaviorTree.Nodes
                 return state;
             }
 
-            Vector3 direction = agent.GetDirectionToTarget();
+            // 예측 이동: 타겟의 이동 방향을 고려
+            Vector3 targetPosition = agent.currentTarget.position;
+            Vector3 predictedPosition = targetPosition;
+            
+            // 타겟의 이동 속도 계산
+            if (Time.time - lastTargetCheckTime > 0.1f && lastTargetCheckTime > 0)
+            {
+                Vector3 targetVelocity = (targetPosition - lastTargetPosition) / (Time.time - lastTargetCheckTime);
+                // 미래 위치 예측 (0.5초 후)
+                predictedPosition = targetPosition + targetVelocity * 0.5f;
+            }
+            
+            lastTargetPosition = targetPosition;
+            lastTargetCheckTime = Time.time;
+            
+            Vector3 direction = (predictedPosition - agent.transform.position).normalized;
             agent.MoveTo(direction);
             
             state = NodeState.RUNNING;

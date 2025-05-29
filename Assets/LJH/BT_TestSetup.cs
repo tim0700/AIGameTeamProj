@@ -1,5 +1,6 @@
 using UnityEngine;
 using BehaviorTree;
+using System.Collections.Generic;
 
 public class BT_TestSetup : MonoBehaviour
 {
@@ -22,6 +23,9 @@ public class BT_TestSetup : MonoBehaviour
     {
         // 기존 에이전트들 삭제
         CleanupExistingAgents();
+        
+        // 경계 설정 (이미 있지 않으면 생성)
+        SetupBorders();
         
         // 공격형 에이전트 생성
         attackingAgent = CreateAgent("AttackingAgent", attackerSpawnPos, "Player", "Enemy", true);
@@ -94,6 +98,13 @@ public class BT_TestSetup : MonoBehaviour
             agentComp.enemyLayer = LayerMask.GetMask(enemyLayerName);
         else
             agentComp.enemyLayer = ~0; // 모든 레이어
+            
+        // 장애물 레이어 설정 (Obstacle 레이어가 있으면 사용, 없으면 기본값)
+        int obstacleLayer = LayerMask.NameToLayer("Obstacle");
+        if (obstacleLayer != -1)
+            agentComp.obstacleLayer = LayerMask.GetMask("Obstacle");
+        else
+            agentComp.obstacleLayer = 1 << 8; // 기본값 Layer 8
         
         // BT 컴포넌트 추가
         if (isAttacking)
@@ -121,6 +132,132 @@ public class BT_TestSetup : MonoBehaviour
         DestroyImmediate(visual.GetComponent<Collider>());
         
         return agent;
+    }
+    
+    void SetupBorders()
+    {
+        // Border 태그가 없으면 생성 (유니티 에디터에서만 가능)
+        #if UNITY_EDITOR
+        try
+        {
+            UnityEditor.SerializedObject tagManager = new UnityEditor.SerializedObject(UnityEditor.AssetDatabase.LoadMainAssetAtPath("ProjectSettings/TagManager.asset"));
+            UnityEditor.SerializedProperty tagsProp = tagManager.FindProperty("tags");
+            
+            bool found = false;
+            for (int i = 0; i < tagsProp.arraySize; i++)
+            {
+                UnityEditor.SerializedProperty t = tagsProp.GetArrayElementAtIndex(i);
+                if (t.stringValue.Equals("Border"))
+                {
+                    found = true;
+                    break;
+                }
+            }
+            
+            if (!found)
+            {
+                tagsProp.InsertArrayElementAtIndex(tagsProp.arraySize);
+                UnityEditor.SerializedProperty newTag = tagsProp.GetArrayElementAtIndex(tagsProp.arraySize - 1);
+                newTag.stringValue = "Border";
+                tagManager.ApplyModifiedProperties();
+                Debug.Log("Border tag created");
+            }
+        }
+        catch { }
+        #endif
+        
+        // 기존 경계 찾기 - 태그 대신 이름으로 찾기
+        GameObject[] allObjects = FindObjectsOfType<GameObject>();
+        List<GameObject> borders = new List<GameObject>();
+        
+        foreach (GameObject obj in allObjects)
+        {
+            if (obj.name.Contains("Border_") || obj.name.Contains("border") || obj.tag == "Border")
+            {
+                borders.Add(obj);
+            }
+        }
+        
+        // 경계가 4개 미만이면 새로 생성
+        if (borders.Count < 4)
+        {
+            // 모든 기존 경계 삭제
+            foreach (GameObject border in borders)
+            {
+                DestroyImmediate(border);
+            }
+            
+            // 새 경계 생성
+            CreateBorder("Border_North", new Vector3(0, 1, 10), new Vector3(20, 2, 1));
+            CreateBorder("Border_South", new Vector3(0, 1, -10), new Vector3(20, 2, 1));
+            CreateBorder("Border_East", new Vector3(10, 1, 0), new Vector3(1, 2, 20));
+            CreateBorder("Border_West", new Vector3(-10, 1, 0), new Vector3(1, 2, 20));
+            
+            Debug.Log("Borders created");
+        }
+        else
+        {
+            // 기존 경계에 Obstacle 레이어 설정
+            foreach (GameObject border in borders)
+            {
+                int obstacleLayer = LayerMask.NameToLayer("Obstacle");
+                if (obstacleLayer != -1)
+                {
+                    border.layer = obstacleLayer;
+                }
+                else
+                {
+                    border.layer = 8; // 기본값
+                }
+            }
+            
+            Debug.Log("Existing borders configured");
+        }
+    }
+    
+    void CreateBorder(string name, Vector3 position, Vector3 scale)
+    {
+        GameObject border = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        border.name = name;
+        
+        // 태그 설정 (태그가 있으면)
+        try
+        {
+            border.tag = "Border";
+        }
+        catch
+        {
+            Debug.LogWarning("Border tag not found. Please create 'Border' tag in Unity.");
+        }
+        
+        border.transform.position = position;
+        border.transform.localScale = scale;
+        
+        // 레이어 설정
+        int obstacleLayer = LayerMask.NameToLayer("Obstacle");
+        if (obstacleLayer != -1)
+        {
+            border.layer = obstacleLayer;
+        }
+        else
+        {
+            border.layer = 8; // 기본값 Layer 8
+        }
+        
+        // 시각적 설정
+        Renderer renderer = border.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            Material mat = new Material(Shader.Find("Standard"));
+            mat.color = new Color(0.5f, 0.5f, 0.5f, 0.8f); // 회색 반투명
+            renderer.material = mat;
+        }
+        
+        // Rigidbody 설정 (고정)
+        Rigidbody rb = border.GetComponent<Rigidbody>();
+        if (rb == null)
+            rb = border.AddComponent<Rigidbody>();
+        rb.isKinematic = true;
     }
     
     void Update()
