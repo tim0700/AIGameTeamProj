@@ -10,31 +10,90 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private float yRotation = 0f;
 
+    // 쿨타임 타이머
+    private float attackCooldown = 0f;
+    private float guardCooldown = 0f;
+    private float dodgeCooldown = 0f;
+
+    // 모션 중 여부
+    private bool isActionPlaying = false;
+
+    // 실제 애니메이션 클립명 반영
+    private const string ATTACK_CLIP = "HumanM@1HAttack01_R";
+    private const string GUARD_CLIP  = "HumanM@ShieldAttack01";
+    private const string DODGE_CLIP  = "HumanM@Combat_TakeDamage01";
+
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         if (animator == null) animator = GetComponent<Animator>();
+
+        // 애니메이션 클립명 리스트 디버그 출력
+        foreach (var clip in animator.runtimeAnimatorController.animationClips)
+        {
+            Debug.Log("[애니메이션 클립] " + clip.name);
+        }
     }
 
     void Update()
     {
-        // 마우스 좌우 회전
+        // [1] 마우스 좌우 회전
         float mouseX = Input.GetAxis("Mouse X");
         yRotation += mouseX * mouseSensitivity;
         transform.rotation = Quaternion.Euler(0, yRotation, 0);
 
-        // WASD 입력
-        int direction = GetDirectionFromKeys();
-        bool isMoving = direction != -1;
+        // [2] 쿨타임 갱신
+        if (attackCooldown > 0) attackCooldown -= Time.deltaTime;
+        if (guardCooldown > 0) guardCooldown -= Time.deltaTime;
+        if (dodgeCooldown > 0) dodgeCooldown -= Time.deltaTime;
 
+        // [3] 모션 중엔 입력 불가
+        if (isActionPlaying) return;
+
+        // [4] WASD 입력
+        float h = Input.GetAxisRaw("Horizontal");
+        float v = Input.GetAxisRaw("Vertical");
+        Vector3 input = new Vector3(h, 0, v).normalized;
+
+        bool isMoving = input.magnitude > 0.1f;
         animator.SetBool("IsMoving", isMoving);
-        animator.SetInteger("Direction", isMoving ? direction : 0); // Idle은 Front(0)로 대체(원하면 Idle State 따로 추가)
+        animator.SetFloat("MoveX", input.x);
+        animator.SetFloat("MoveY", input.z);
 
-        // FixedUpdate 이동 처리용으로 따로 입력 저장하면 좋음
+        // [5] 이동 중에는 액션 불가
+        if (isMoving) return;
+
+        // [6] 공격 (좌클릭, 쿨타임 2.5초)
+        if (Input.GetMouseButtonDown(0) && attackCooldown <= 0f)
+        {
+            animator.SetTrigger("Attack");
+            attackCooldown = 2.5f;
+            StartActionLock(GetCurrentAnimationLength(ATTACK_CLIP));
+        }
+        // [7] 방어 (우클릭, 쿨타임 2.5초)
+        else if (Input.GetMouseButtonDown(1) && guardCooldown <= 0f)
+        {
+            animator.SetTrigger("Guard");
+            guardCooldown = 2.5f;
+            StartActionLock(GetCurrentAnimationLength(GUARD_CLIP));
+        }
+        // [8] 회피 (E, 쿨타임 5초)
+        else if (Input.GetKeyDown(KeyCode.E) && dodgeCooldown <= 0f)
+        {
+            animator.SetTrigger("Dodge");
+            dodgeCooldown = 5.0f;
+            StartActionLock(GetCurrentAnimationLength(DODGE_CLIP));
+        }
     }
 
     void FixedUpdate()
     {
+        // 모션 중엔 이동 불가
+        if (isActionPlaying)
+        {
+            rb.velocity = new Vector3(0, rb.velocity.y, 0);
+            return;
+        }
         float h = Input.GetAxisRaw("Horizontal");
         float v = Input.GetAxisRaw("Vertical");
         Vector3 move = new Vector3(h, 0, v).normalized;
@@ -42,24 +101,24 @@ public class PlayerController : MonoBehaviour
         rb.velocity = moveVec * moveSpeed + new Vector3(0, rb.velocity.y, 0);
     }
 
-    // 8방향: 0=Front(W), 1=FrontRight(W+D), 2=Right(D), 3=BackRight(S+D), 4=Back(S), 5=BackLeft(S+A), 6=Left(A), 7=FrontLeft(W+A)
-    int GetDirectionFromKeys()
+    // 애니메이션 길이 가져오기 (클립명 완전 일치 필요)
+    float GetCurrentAnimationLength(string animClipName)
     {
-        bool w = Input.GetKey(KeyCode.W);
-        bool s = Input.GetKey(KeyCode.S);
-        bool a = Input.GetKey(KeyCode.A);
-        bool d = Input.GetKey(KeyCode.D);
+        var clip = System.Array.Find(animator.runtimeAnimatorController.animationClips, x => x.name == animClipName);
+        if (clip != null) return clip.length;
+        Debug.LogWarning("[애니메이션 클립 미존재] " + animClipName + " → 기본값(0.7초) 적용");
+        return 0.7f;
+    }
 
-        if (w && !a && !d && !s) return 0; // Front
-        if (w && d && !a && !s) return 1; // FrontRight
-        if (d && !w && !s && !a) return 2; // Right
-        if (s && d && !w && !a) return 3; // BackRight
-        if (s && !a && !d && !w) return 4; // Back
-        if (s && a && !w && !d) return 5; // BackLeft
-        if (a && !w && !s && !d) return 6; // Left
-        if (w && a && !d && !s) return 7; // FrontLeft
+    // 액션 중 입력 락
+    void StartActionLock(float duration)
+    {
+        isActionPlaying = true;
+        Invoke(nameof(EndActionLock), duration);
+    }
 
-        // 대각선 우선, 중복/입력없음은 Idle(-1)
-        return -1;
+    void EndActionLock()
+    {
+        isActionPlaying = false;
     }
 }
