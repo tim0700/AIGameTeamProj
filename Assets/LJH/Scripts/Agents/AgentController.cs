@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -8,7 +9,7 @@ public class AgentController : MonoBehaviour
     public string agentName = "BT Agent";
     public IBattleAgent agent;
 
-    [Header("이동 설정 (Player.cs 기반)")]
+    [Header("이동 설정")]
     public float moveSpeed = 5f;
 
     [Header("체력 설정")]
@@ -18,6 +19,12 @@ public class AgentController : MonoBehaviour
     [Header("애니메이션")]
     public Animator animator;
 
+    [Header("UI 연결")]
+    public Slider healthBar;
+
+    [Header("회전 설정")]
+    public float rotationSpeed = 10f;
+
     [Header("쿨타임 설정")]
     public float attackCooldownTime = 2.5f;
     public float defendCooldownTime = 2.5f;
@@ -26,6 +33,11 @@ public class AgentController : MonoBehaviour
     [Header("전투 설정")]
     public float attackRange = 2f;
     public float attackDamage = 25f;
+
+    [Header("무기 시스템")]
+    public GameObject weaponObject; // 무기 오브젝트(콜라이더+isTrigger, 태그="Weapon")
+    private Collider weaponCollider;
+    private Coroutine attackCoroutine;
 
     // 내부 상태
     private Rigidbody rb;
@@ -37,28 +49,34 @@ public class AgentController : MonoBehaviour
     private float defendCooldown = 0f;
     private float dodgeCooldown = 0f;
 
-    // 행동 락 (Player.cs와 동일)
+    // 행동 락
     private bool isActionPlaying = false;
 
-    // 무적 시간 (Player.cs와 동일)
+    // 무적 시간
     private bool isInvincible = false;
     private float invincibleTimer = 0f;
     private float invincibleDuration = 2.0f;
-
     void Awake()
     {
         rb = GetComponent<Rigidbody>();
         if (animator == null) animator = GetComponent<Animator>();
 
         currentHP = maxHP;
+
+        // 무기 콜라이더 참조 및 기본 비활성화
+        // if (weaponObject != null)
+            weaponCollider = weaponObject.GetComponent<Collider>();
+        if (weaponCollider != null)
+            weaponCollider.enabled = false;
     }
 
     void Start()
     {
-        // 에이전트 초기화 (추후 BT 에이전트 연결 시 사용)
-        if (agent != null)
+        // 같은 GameObject에 있는 IBattleAgent 구현체 찾기
+        IBattleAgent foundAgent = GetComponent<IBattleAgent>();
+        if (foundAgent != null)
         {
-            agent.Initialize(this);
+            SetAgent(foundAgent);
         }
     }
 
@@ -66,22 +84,58 @@ public class AgentController : MonoBehaviour
     {
         UpdateCooldowns();
         UpdateInvincibility();
-
-        if (animator != null)
-        {
-            animator.SetFloat("HP", currentHP / maxHP);
-            animator.SetBool("IsAlive", IsAlive());
-        }
+        UpdateMovementAnimation();
+        UpdateHealthBarUI();
     }
 
     void FixedUpdate()
     {
-        // 행동 중이면 이동 강제 정지 (Player.cs와 동일)
+        // 행동 중이면 이동 강제 정지
         if (isActionPlaying)
         {
             rb.velocity = new Vector3(0, rb.velocity.y, 0);
         }
     }
+
+    #region UI 업데이트
+
+    private void UpdateHealthBarUI()
+    {
+        if (healthBar != null)
+        {
+            healthBar.value = currentHP / maxHP;
+        }
+    }
+
+    #endregion
+
+    #region 애니메이션 업데이트
+
+    private void UpdateMovementAnimation()
+    {
+        if (animator == null) return;
+
+        // 실제 velocity를 기반으로 이동 상태 확인
+        Vector3 velocity = rb.velocity;
+        bool isMoving = velocity.magnitude > 0.1f;
+
+        animator.SetBool("IsMoving", isMoving);
+
+        if (isMoving)
+        {
+            // 로컬 좌표계 기준으로 이동 방향 계산
+            Vector3 localVelocity = transform.InverseTransformDirection(velocity);
+            animator.SetFloat("MoveX", Mathf.Clamp(localVelocity.x, -1f, 1f));
+            animator.SetFloat("MoveY", Mathf.Clamp(localVelocity.z, -1f, 1f));
+        }
+        else
+        {
+            animator.SetFloat("MoveX", 0);
+            animator.SetFloat("MoveY", 0);
+        }
+    }
+
+    #endregion
 
     #region 공개 메서드 (BattleManager에서 호출)
 
@@ -142,7 +196,6 @@ public class AgentController : MonoBehaviour
     {
         currentHP = maxHP;
         currentState = AgentState.Idle;
-        transform.position = transform.position; // 위치는 BattleManager에서 설정
 
         if (animator != null)
         {
@@ -177,7 +230,7 @@ public class AgentController : MonoBehaviour
 
     #endregion
 
-    #region 행동 실행 (Player.cs 기반)
+    #region 행동 실행
 
     public ActionResult ExecuteAction(AgentAction action)
     {
@@ -214,14 +267,6 @@ public class AgentController : MonoBehaviour
     private ActionResult ExecuteIdle()
     {
         currentState = AgentState.Idle;
-
-        if (animator != null)
-        {
-            animator.SetBool("IsMoving", false);
-            animator.SetFloat("MoveX", 0);
-            animator.SetFloat("MoveY", 0);
-        }
-
         return ActionResult.Success(ActionType.Idle);
     }
 
@@ -231,19 +276,20 @@ public class AgentController : MonoBehaviour
             return ActionResult.Failure(action.type, "다른 행동 중");
 
         Vector3 moveDirection = GetMoveDirection(action.type);
-        Vector3 worldDirection = transform.TransformDirection(moveDirection);
 
-        rb.velocity = new Vector3(worldDirection.x * moveSpeed, rb.velocity.y, worldDirection.z * moveSpeed);
+        // 월드 좌표 기준 이동 (회전에 영향받지 않음)
+        Vector3 worldMoveDirection = moveDirection;
 
-        currentState = AgentState.Moving;
+        rb.velocity = new Vector3(worldMoveDirection.x * moveSpeed, rb.velocity.y, worldMoveDirection.z * moveSpeed);
 
-        if (animator != null)
+        // 이동 방향을 바라보도록 회전
+        if (worldMoveDirection.magnitude > 0.1f)
         {
-            animator.SetBool("IsMoving", true);
-            animator.SetFloat("MoveX", moveDirection.x);
-            animator.SetFloat("MoveY", moveDirection.z);
+            Quaternion targetRotation = Quaternion.LookRotation(worldMoveDirection);
+            StartCoroutine(SmoothRotation(targetRotation, 0.2f));
         }
 
+        currentState = AgentState.Moving;
         return ActionResult.Success(action.type);
     }
 
@@ -251,6 +297,17 @@ public class AgentController : MonoBehaviour
     {
         if (attackCooldown > 0f)
             return ActionResult.Failure(ActionType.Attack, "공격 쿨타임");
+
+        // 공격 전에 적을 바라보도록 회전
+        if (enemy != null)
+        {
+            Vector3 directionToEnemy = (enemy.transform.position - transform.position).normalized;
+            if (directionToEnemy.magnitude > 0.1f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(directionToEnemy);
+                StartCoroutine(SmoothRotation(targetRotation, 0.1f));
+            }
+        }
 
         attackCooldown = attackCooldownTime;
         currentState = AgentState.Attacking;
@@ -262,18 +319,11 @@ public class AgentController : MonoBehaviour
 
         StartActionLock(0.7f); // 공격 모션 시간
 
-        // 공격 판정 (간단한 거리 기반)
-        if (enemy != null)
-        {
-            float distance = Vector3.Distance(transform.position, enemy.transform.position);
-            if (distance <= attackRange)
-            {
-                enemy.TakeDamage(attackDamage);
-                return ActionResult.Success(ActionType.Attack, attackDamage);
-            }
-        }
+        // LYD 시스템: 공격 애니메이션 시간 동안만 무기 콜라이더 활성화
+        if (attackCoroutine != null) StopCoroutine(attackCoroutine);
+        attackCoroutine = StartCoroutine(EnableWeaponColliderForDuration(0.7f));
 
-        return ActionResult.Success(ActionType.Attack, 0f);
+        return ActionResult.Success(ActionType.Attack, 0f); // 데미지는 충돌에서 처리
     }
 
     private ActionResult ExecuteDefend()
@@ -289,7 +339,7 @@ public class AgentController : MonoBehaviour
             animator.SetTrigger("Guard");
         }
 
-        StartActionLock(0.7f); // 방어 모션 시간
+        StartActionLock(0.7f);
 
         return ActionResult.Success(ActionType.Defend);
     }
@@ -307,7 +357,7 @@ public class AgentController : MonoBehaviour
             animator.SetTrigger("Dodge");
         }
 
-        StartActionLock(0.7f); // 회피 모션 시간
+        StartActionLock(0.7f);
 
         // 회피 중 무적 처리
         isInvincible = true;
@@ -364,6 +414,23 @@ public class AgentController : MonoBehaviour
         currentState = AgentState.Idle;
     }
 
+    // 부드러운 회전을 위한 코루틴
+    private IEnumerator SmoothRotation(Quaternion targetRotation, float duration)
+    {
+        Quaternion startRotation = transform.rotation;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            transform.rotation = Quaternion.Slerp(startRotation, targetRotation, t);
+            yield return null;
+        }
+
+        transform.rotation = targetRotation;
+    }
+
     public void TakeDamage(float damage)
     {
         if (isInvincible || !IsAlive()) return;
@@ -384,4 +451,52 @@ public class AgentController : MonoBehaviour
     }
 
     #endregion
+
+    #region 무기 시스템 (LYD 기반)
+
+    /// <summary>
+    /// 공격 애니메이션 시간 동안 무기 콜라이더 On/Off (LYD 시스템)
+    /// </summary>
+    private IEnumerator EnableWeaponColliderForDuration(float duration)
+    {
+        EnableWeaponCollider();
+        // 실제 판정 타이밍(애니메이션 흐름에 따라 0.7~1.0배수 조절 가능)
+        yield return new WaitForSeconds(duration * 0.7f);
+        DisableWeaponCollider();
+    }
+
+    /// <summary>
+    /// 무기 콜라이더 활성화
+    /// </summary>
+    private void EnableWeaponCollider()
+    {
+        if (weaponCollider != null)
+            weaponCollider.enabled = true;
+    }
+
+    /// <summary>
+    /// 무기 콜라이더 비활성화
+    /// </summary>
+    private void DisableWeaponCollider()
+    {
+        if (weaponCollider != null)
+            weaponCollider.enabled = false;
+    }
+
+    /// <summary>
+    /// 무기에 맞을 때 피격 판정 (LYD 시스템)
+    /// </summary>
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Weapon") && !isInvincible)
+        {
+            TakeDamage(25f);
+            Debug.Log($"{agentName} 무기에 피격! 데미지: 25");
+        }
+    }
+
+    #endregion
+
 }
+
+
