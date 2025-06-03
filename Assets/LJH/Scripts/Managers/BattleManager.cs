@@ -4,30 +4,31 @@ using System.Collections;
 
 public class BattleManager : MonoBehaviour
 {
-    [Header("¿¡ÀÌÀüÆ® ¼³Á¤")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½")]
     public AgentController agentA;
     public AgentController agentB;
 
-    [Header("ÀüÅõ ¼³Á¤")]
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public float maxBattleDuration = 60f;
     public Transform spawnPointA;
     public Transform spawnPointB;
 
-    [Header("UI ¿¬°á")]
+    [Header("UI ï¿½ï¿½ï¿½ï¿½")]
     public Text battleStatusText;
     public Button startBattleButton;
     public Button resetBattleButton;
+    public BattleUIManager uiManager;  // UI ê´€ë¦¬ì ì¶”ê°€
 
-    [Header("¾Æ·¹³ª ¼³Á¤")]
+    [Header("ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
     public Vector3 arenaCenter = Vector3.zero;
     public float arenaRadius = 10f;
 
-    // ÀüÅõ »óÅÂ
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     private bool battleActive = false;
     private float battleStartTime;
     private int battleCount = 0;
 
-    // µ¥ÀÌÅÍ ¼öÁı
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     private BattleData currentBattleData;
 
     [System.Serializable]
@@ -88,28 +89,34 @@ public class BattleManager : MonoBehaviour
     {
         if (battleActive) return;
 
-        Debug.Log("ÀüÅõ ½ÃÀÛ!");
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½!");
 
         battleActive = true;
         battleStartTime = Time.time;
         battleCount++;
 
-        // ÀüÅõ µ¥ÀÌÅÍ ÃÊ±âÈ­
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         currentBattleData = new BattleData
         {
             agentAName = agentA?.GetAgentName() ?? "Agent A",
             agentBName = agentB?.GetAgentName() ?? "Agent B"
         };
 
-        // ¿¡ÀÌÀüÆ® ÃÊ±âÈ­
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½Ê±ï¿½È­
         if (agentA != null) agentA.StartBattle();
         if (agentB != null) agentB.StartBattle();
 
-        // ¿¡ÀÌÀüÆ®µé¿¡°Ô »ó´ë¹æ Á¤º¸ ¼³Á¤
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½é¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (agentA != null && agentB != null)
         {
             agentA.SetEnemy(agentB);
             agentB.SetEnemy(agentA);
+        }
+
+        // UI ì´ˆê¸°í™”
+        if (uiManager != null)
+        {
+            uiManager.InitializeBattle(agentA, agentB);
         }
     }
 
@@ -117,14 +124,14 @@ public class BattleManager : MonoBehaviour
     {
         float battleDuration = Time.time - battleStartTime;
 
-        // ½Ã°£ ÃÊ°ú Ã¼Å©
+        // ï¿½Ã°ï¿½ ï¿½Ê°ï¿½ Ã¼Å©
         if (battleDuration > maxBattleDuration)
         {
-            EndBattle(null, "½Ã°£ ÃÊ°ú");
+            EndBattle(null, "ï¿½Ã°ï¿½ ï¿½Ê°ï¿½");
             return;
         }
 
-        // ¿¡ÀÌÀüÆ® ¾÷µ¥ÀÌÆ®
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
         if (agentA != null && agentA.IsAlive())
         {
             UpdateAgent(agentA, agentB);
@@ -140,7 +147,7 @@ public class BattleManager : MonoBehaviour
     {
         if (agent == null || enemy == null) return;
 
-        // °üÂû Á¤º¸ »ı¼º
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         GameObservation obs = new GameObservation
         {
             selfPosition = agent.transform.position,
@@ -154,7 +161,7 @@ public class BattleManager : MonoBehaviour
             arenaRadius = arenaRadius
         };
 
-        // ¿¡ÀÌÀüÆ® ¾÷µ¥ÀÌÆ®
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
         agent.UpdateAgent(obs);
     }
 
@@ -167,15 +174,15 @@ public class BattleManager : MonoBehaviour
 
         if (!agentAAlive && !agentBAlive)
         {
-            EndBattle(null, "¹«½ÂºÎ");
+            EndBattle(null, "ï¿½ï¿½ï¿½Âºï¿½");
         }
         else if (!agentAAlive)
         {
-            EndBattle(agentB, "Agent B ½Â¸®");
+            EndBattle(agentB, "Agent B ï¿½Â¸ï¿½");
         }
         else if (!agentBAlive)
         {
-            EndBattle(agentA, "Agent A ½Â¸®");
+            EndBattle(agentA, "Agent A ï¿½Â¸ï¿½");
         }
     }
 
@@ -186,15 +193,15 @@ public class BattleManager : MonoBehaviour
         battleActive = false;
         float duration = Time.time - battleStartTime;
 
-        Debug.Log($"ÀüÅõ Á¾·á: {reason} (Áö¼Ó½Ã°£: {duration:F2}ÃÊ)");
+        Debug.Log($"ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: {reason} (ï¿½ï¿½ï¿½Ó½Ã°ï¿½: {duration:F2}ï¿½ï¿½)");
 
-        // ÀüÅõ µ¥ÀÌÅÍ ¿Ï¼º
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ï¼ï¿½
         currentBattleData.duration = duration;
-        currentBattleData.winner = winner?.GetAgentName() ?? "¹«½ÂºÎ";
+        currentBattleData.winner = winner?.GetAgentName() ?? "ï¿½ï¿½ï¿½Âºï¿½";
         currentBattleData.agentAFinalHP = agentA?.GetCurrentHP() ?? 0f;
         currentBattleData.agentBFinalHP = agentB?.GetCurrentHP() ?? 0f;
 
-        // ¿¡ÀÌÀüÆ®µé¿¡°Ô °á°ú Åëº¸
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½é¿¡ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ëº¸
         EpisodeResult resultA = new EpisodeResult
         {
             won = winner == agentA,
@@ -216,7 +223,13 @@ public class BattleManager : MonoBehaviour
         agentA?.OnBattleEnd(resultA);
         agentB?.OnBattleEnd(resultB);
 
-        // µ¥ÀÌÅÍ ÀúÀå (ÃßÈÄ CSV ÀúÀå ±â´É Ãß°¡ ¿¹Á¤)
+        // UI ê²°ê³¼ í‘œì‹œ
+        if (uiManager != null)
+        {
+            uiManager.ShowBattleResult(winner, currentBattleData);
+        }
+
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ CSV ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½)
         SaveBattleData(currentBattleData);
     }
 
@@ -229,7 +242,13 @@ public class BattleManager : MonoBehaviour
         if (agentA != null) agentA.ResetAgent();
         if (agentB != null) agentB.ResetAgent();
 
-        Debug.Log("ÀüÅõ ¸®¼Â ¿Ï·á");
+        // UI ë¦¬ì…‹
+        if (uiManager != null)
+        {
+            uiManager.ResetBattleUI();
+        }
+
+        Debug.Log("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½");
     }
 
     private void UpdateUI()
@@ -239,13 +258,13 @@ public class BattleManager : MonoBehaviour
             if (battleActive)
             {
                 float duration = Time.time - battleStartTime;
-                battleStatusText.text = $"ÀüÅõ Áß... ({duration:F1}s)\n" +
+                battleStatusText.text = $"ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½... ({duration:F1}s)\n" +
                                        $"Agent A HP: {agentA?.GetCurrentHP():F0}\n" +
                                        $"Agent B HP: {agentB?.GetCurrentHP():F0}";
             }
             else
             {
-                battleStatusText.text = $"ÀüÅõ ´ë±â Áß\nÀüÅõ È½¼ö: {battleCount}";
+                battleStatusText.text = $"ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½\nï¿½ï¿½ï¿½ï¿½ È½ï¿½ï¿½: {battleCount}";
             }
         }
 
@@ -255,11 +274,28 @@ public class BattleManager : MonoBehaviour
 
     private void SaveBattleData(BattleData data)
     {
-        Debug.Log($"ÀüÅõ µ¥ÀÌÅÍ: {data.agentAName} vs {data.agentBName} - ½ÂÀÚ: {data.winner}");
-        // TODO: CSV ÆÄÀÏ·Î ÀúÀåÇÏ´Â ±â´É Ãß°¡ ¿¹Á¤
+        Debug.Log($"ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: {data.agentAName} vs {data.agentBName} - ï¿½ï¿½ï¿½ï¿½: {data.winner}");
+        // TODO: CSV ï¿½ï¿½ï¿½Ï·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ ï¿½ß°ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
 
-    // µğ¹ö±×¿ë ±âÁî¸ğ
+    /// <summary>
+    /// í˜„ì¬ ì „íˆ¬ ì‹œê°„ ë°˜í™˜ (UIì—ì„œ ì‚¬ìš©)
+    /// </summary>
+    public float GetCurrentBattleTime()
+    {
+        if (!battleActive) return 0f;
+        return Time.time - battleStartTime;
+    }
+
+    /// <summary>
+    /// ì „íˆ¬ í™œì„± ìƒíƒœ ë°˜í™˜ (UIì—ì„œ ì‚¬ìš©)
+    /// </summary>
+    public bool IsBattleActive()
+    {
+        return battleActive;
+    }
+
+    // ï¿½ï¿½ï¿½ï¿½×¿ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½
     void OnDrawGizmos()
     {
         Gizmos.color = Color.yellow;
