@@ -307,20 +307,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
   m_PrefabInstance: {fileID: 587279387}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &175257504
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 175257503}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 82d19440ef5342a40b69aa1cd0c3c5a3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  actionDelay: 1
-  aggressionLevel: 0.7
 --- !u!114 &175257505 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
@@ -337,6 +323,24 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7695252909553134583, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
   m_PrefabInstance: {fileID: 587279387}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &175257509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175257503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 121dfbe1abcf17643a7cf693d93293c9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentName: BT Agent
+  agentType: BT
+  attackRange: 2
+  detectionRange: 8
+  preferredDistance: 4
+  counterAttackHPThreshold: 70
 --- !u!1 &298778352
 GameObject:
   m_ObjectHideFlags: 0
@@ -421,20 +425,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
   m_PrefabInstance: {fileID: 2101856490}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &308475766
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 308475765}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b2f4334f81d41f4ab333fb324689560, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  actionDelay: 1
-  aggressionLevel: 0.7
 --- !u!114 &308475767 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
@@ -451,6 +441,23 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7695252909553134583, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
   m_PrefabInstance: {fileID: 2101856490}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &308475771
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 308475765}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 155420cda3c046048ae21666c2a5ea13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentName: BT Agent
+  agentType: BT
+  attackRange: 2
+  detectionRange: 8
+  emergencyHPThreshold: 30
 --- !u!1 &384540523
 GameObject:
   m_ObjectHideFlags: 0
@@ -868,7 +875,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 175257504}
+      addedObject: {fileID: 175257509}
   m_SourcePrefab: {fileID: 100100000, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
 --- !u!1 &616053395
 GameObject:
@@ -2743,7 +2750,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 308475766}
+      addedObject: {fileID: 308475771}
   m_SourcePrefab: {fileID: 100100000, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
