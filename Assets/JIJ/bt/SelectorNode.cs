@@ -4,11 +4,10 @@ public class SelectorNode : BTNode
 {
     private List<BTNode> children;
 
-    public SelectorNode(List<BTNode> children)
+    public SelectorNode(List<BTNode> children) // 생성자
     {
-        this.children = children;
+        this.children = children; // 들어온 자식 노드 리스트를 이 객체의 children 변수에 저장해라 
     }
-
     public override NodeState Evaluate()
     {
         foreach (BTNode child in children)
