@@ -13,6 +13,9 @@ namespace LJH.BT
 
         protected BTNode rootNode;
         protected AgentController controller;
+        
+        // Public getter for controller
+        public AgentController Controller => controller;
 
         public virtual void Initialize(AgentController controller)
         {

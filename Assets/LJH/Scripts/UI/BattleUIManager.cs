@@ -50,7 +50,11 @@ public class BattleUIManager : MonoBehaviour
     void Start()
     {
         // BattleManager 찾기
+#if UNITY_2023_1_OR_NEWER
+        battleManager = FindFirstObjectByType<BattleManager>();
+#else
         battleManager = FindObjectOfType<BattleManager>();
+#endif
         if (battleManager == null)
         {
             Debug.LogError("BattleManager를 찾을 수 없습니다!");

@@ -18,7 +18,16 @@ namespace LJH.BT
             agentName = "공격형 BT 에이전트";
             agentType = "BT-Aggressive";
 
-            // 1. 응급 상황 처리 (HP 30% 이하일 때 회피)
+            // 1. 안전 시스템 (최우선) - 아레나 경계 감지 및 복귀
+            var boundaryCheck = new CheckArenaBoundaryNode(0.8f, 0.9f, 0.95f); // 80%, 90%, 95% 경계
+            var returnToArena = new ReturnToArenaNodeBT(0.7f, 1.2f); // 70% 안전 지역, 1.2배 속도
+            var safetySequence = new SequenceNode(new List<BTNode> 
+            { 
+                boundaryCheck, 
+                returnToArena 
+            });
+
+            // 2. 응급 상황 처리 (HP 30% 이하일 때 회피)
             var emergencyHPCheck = new CheckHPNode(emergencyHPThreshold, true); // 자신의 HP 확인
             var emergencyDodge = new DodgeNode();
             var emergencySequence = new SequenceNode(new List<BTNode> 
@@ -27,7 +36,7 @@ namespace LJH.BT
                 emergencyDodge 
             });
 
-            // 2. 공격 시퀀스
+            // 3. 공격 시퀀스
             var detectEnemy = new DetectEnemyNode(detectionRange);
             var checkAttackCooldown = new CheckCooldownNode(ActionType.Attack);
             var moveToEnemy = new MoveToEnemyNode(attackRange);
@@ -41,26 +50,27 @@ namespace LJH.BT
                 attack 
             });
 
-            // 3. 이동 및 접근 (공격이 불가능할 때)
+            // 4. 이동 및 접근 (공격이 불가능할 때)
             var moveToEnemyAlternative = new SequenceNode(new List<BTNode> 
             { 
                 detectEnemy, 
                 new MoveToEnemyNode(attackRange - 0.5f) 
             });
 
-            // 4. 기본 순찰
-            var patrol = new PatrolNode(3f);
+            // 5. 안전 순찰 (아레나 경계 고려)
+            var patrol = new SafePatrolNode(3f, 0.75f); // 순찰 반경 3f, 아레나의 75% 내에서만
 
-            // 최종 트리 구성: 응급상황 > 공격 > 접근 > 순찰
+            // 최종 트리 구성: 안전 > 응급상황 > 공격 > 접근 > 순찰
             rootNode = new SelectorNode(new List<BTNode> 
             { 
-                emergencySequence,
-                attackSequence, 
-                moveToEnemyAlternative, 
-                patrol 
+                safetySequence,       // 🆕 최우선 안전 시스템
+                emergencySequence,    // 기존 응급 처리
+                attackSequence,       // 기존 공격
+                moveToEnemyAlternative, // 기존 접근
+                patrol                // 기존 순찰
             });
 
-            Debug.Log($"{agentName} BT 구조 생성 완료");
+            Debug.Log($"{agentName} BT 구조 생성 완료 (안전 시스템 포함)");
         }
 
         public override void OnActionResult(ActionResult result)
