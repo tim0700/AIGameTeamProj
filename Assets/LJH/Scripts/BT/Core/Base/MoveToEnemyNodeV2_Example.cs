@@ -339,7 +339,7 @@ namespace LJH.BT
         /// <summary>
         /// 기존 코드와의 호환성을 위한 메서드
         /// </summary>
-        public void SetStoppingDistance(float distance)
+        public override void SetStoppingDistance(float distance)
         {
             movementParameters.stoppingDistance = distance;
         }
@@ -347,7 +347,7 @@ namespace LJH.BT
         /// <summary>
         /// 기존 코드와의 호환성을 위한 메서드
         /// </summary>
-        public float GetStoppingDistance()
+        public override float GetStoppingDistance()
         {
             return movementParameters.stoppingDistance;
         }
