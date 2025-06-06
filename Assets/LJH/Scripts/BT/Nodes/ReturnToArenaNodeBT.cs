@@ -17,10 +17,15 @@ namespace LJH.BT
         private bool isReturning = false;
         private float returnStartTime;
         private float maxReturnTime = 5f; // 최대 복귀 시간 (무한 루프 방지)
+        private int consecutiveFailures = 0;
+        private const int maxFailures = 3;
 
-        public ReturnToArenaNodeBT() { }
+        public ReturnToArenaNodeBT() : base("ReturnToArena Node")
+        {
+        }
 
-        public ReturnToArenaNodeBT(float safe, float speedMult = 1.2f)
+        public ReturnToArenaNodeBT(float safe, float speedMult = 1.2f) 
+            : base($"ReturnToArena Node (Safe: {safe:F1})")
         {
             safeDistance = safe;
             moveSpeedMultiplier = speedMult;
@@ -28,6 +33,12 @@ namespace LJH.BT
 
         public override NodeState Evaluate(GameObservation observation)
         {
+            // 기본 조건 확인 (새로운 BTNode 기능 활용)
+            if (!CheckBasicConditions())
+            {
+                return NodeState.Failure;
+            }
+
             // 현재 아레나 중심으로부터의 거리
             float currentDistance = Vector3.Distance(observation.selfPosition, observation.arenaCenter);
             float normalizedDistance = currentDistance / observation.arenaRadius;
@@ -35,12 +46,13 @@ namespace LJH.BT
             // 이미 안전 지역에 있다면 성공
             if (normalizedDistance <= safeDistance)
             {
-                if (isReturning)
-                {
-                    Debug.Log($"[ReturnToArena] 안전 지역 도달! Current: {normalizedDistance:F2} <= Target: {safeDistance}");
-                    isReturning = false;
-                }
-                return NodeState.Success;
+                if (isReturning && enableLogging)
+                    Debug.Log($"[{nodeName}] 안전 지역 도달! Current: {normalizedDistance:F2} <= Target: {safeDistance}");
+                
+                isReturning = false;
+                consecutiveFailures = 0;
+                state = NodeState.Success;
+                return state;
             }
 
             // 복귀 시작
@@ -48,17 +60,76 @@ namespace LJH.BT
             {
                 isReturning = true;
                 returnStartTime = Time.time;
-                Debug.Log($"[ReturnToArena] 복귀 시작! Current distance: {normalizedDistance:F2}");
+                consecutiveFailures = 0;
+                
+                if (enableLogging)
+                    Debug.Log($"[{nodeName}] 복귀 시작! Current distance: {normalizedDistance:F2}");
             }
 
             // 시간 초과 체크 (무한 루프 방지)
             if (Time.time - returnStartTime > maxReturnTime)
             {
-                Debug.LogWarning("[ReturnToArena] 복귀 시간 초과! 실패 처리");
+                if (enableLogging)
+                    Debug.LogWarning($"[{nodeName}] 복귀 시간 초과! 실패 처리");
+                
                 isReturning = false;
-                return NodeState.Failure;
+                state = NodeState.Failure;
+                return state;
             }
 
+            // 목표 위치 계산
+            CalculateTargetPosition(observation);
+
+            // 목표까지의 거리
+            float distanceToTarget = Vector3.Distance(observation.selfPosition, targetPosition);
+
+            // 목표 도달 확인
+            if (distanceToTarget < reachThreshold)
+            {
+                if (enableLogging)
+                    Debug.Log($"[{nodeName}] 목표 지점 도달!");
+                
+                isReturning = false;
+                consecutiveFailures = 0;
+                state = NodeState.Success;
+                return state;
+            }
+
+            // 이동 실행
+            bool moveSuccess = ExecuteReturnMovement(observation);
+            
+            if (moveSuccess)
+            {
+                consecutiveFailures = 0;
+                state = NodeState.Running; // 아직 이동 중
+            }
+            else
+            {
+                consecutiveFailures++;
+                if (consecutiveFailures >= maxFailures)
+                {
+                    if (enableLogging)
+                        Debug.LogWarning($"[{nodeName}] 연속 실패로 복귀 포기");
+                    
+                    isReturning = false;
+                    state = NodeState.Failure;
+                }
+                else
+                {
+                    state = NodeState.Running; // 재시도
+                }
+            }
+
+            return state;
+        }
+
+        #region 복귀 로직
+        
+        /// <summary>
+        /// 목표 위치 계산
+        /// </summary>
+        private void CalculateTargetPosition(GameObservation observation)
+        {
             // 아레나 중심 방향 계산
             Vector3 directionToCenter = (observation.arenaCenter - observation.selfPosition).normalized;
 
@@ -70,53 +141,201 @@ namespace LJH.BT
 
             // 안전 지역 내의 목표 지점
             targetPosition = observation.arenaCenter + currentDirection * (observation.arenaRadius * safeDistance * 0.9f);
-
-            // 목표까지의 거리
-            float distanceToTarget = Vector3.Distance(observation.selfPosition, targetPosition);
-
-            // 목표 도달 확인
-            if (distanceToTarget < reachThreshold)
-            {
-                Debug.Log("[ReturnToArena] 목표 지점 도달!");
-                isReturning = false;
-                return NodeState.Success;
-            }
-
+        }
+        
+        /// <summary>
+        /// 복귀 이동 실행
+        /// </summary>
+        private bool ExecuteReturnMovement(GameObservation observation)
+        {
             // 이동 방향 계산 (직접 중심으로 가는 것이 아닌 목표 지점으로)
             Vector3 moveDirection = (targetPosition - observation.selfPosition).normalized;
             moveDirection.y = 0; // 평면 이동 보장
 
             // 이동 실행
             AgentAction moveAction = AgentAction.Move(moveDirection);
+            ActionResult result = agentController.ExecuteAction(moveAction);
             
-            // AgentController가 없는 경우를 대비한 체크
-            if (agentController != null)
+            if (result.success)
             {
-                // 빠른 이동을 위해 직접 실행
-                ActionResult result = agentController.ExecuteAction(moveAction);
+                if (enableLogging)
+                    Debug.Log($"[{nodeName}] 복귀 이동 중... Distance to safe zone: {GetNormalizedDistance(observation):F2}");
                 
-                if (result.success)
-                {
-                    Debug.Log($"[ReturnToArena] 이동 중... Distance to safe zone: {normalizedDistance:F2}");
-                }
-                else
-                {
-                    Debug.LogWarning($"[ReturnToArena] 이동 실패: {result.message}");
-                }
+                return true;
             }
-
-            return NodeState.Running; // 아직 이동 중
+            else
+            {
+                if (enableLogging)
+                    Debug.LogWarning($"[{nodeName}] 복귀 이동 실패: {result.message}");
+                
+                return false;
+            }
         }
-
+        
+        #endregion
+        
+        #region 추가 기능들
+        
         /// <summary>
-        /// 노드 초기화 시 상태 리셋
+        /// 안전 거리 설정
+        /// </summary>
+        public void SetSafeDistance(float distance)
+        {
+            safeDistance = Mathf.Clamp01(distance);
+            SetNodeName($"ReturnToArena Node (Safe: {safeDistance:F1})");
+            
+            if (enableLogging)
+                Debug.Log($"[{nodeName}] 안전 거리 변경: {safeDistance:F2}");
+        }
+        
+        /// <summary>
+        /// 이동 속도 배율 설정
+        /// </summary>
+        public void SetSpeedMultiplier(float multiplier)
+        {
+            moveSpeedMultiplier = Mathf.Max(0.1f, multiplier);
+            
+            if (enableLogging)
+                Debug.Log($"[{nodeName}] 속도 배율 변경: {moveSpeedMultiplier:F2}");
+        }
+        
+        /// <summary>
+        /// 현재 안전 거리 반환
+        /// </summary>
+        public float GetSafeDistance() => safeDistance;
+        
+        /// <summary>
+        /// 현재 정규화된 거리 반환
+        /// </summary>
+        public float GetNormalizedDistance(GameObservation observation)
+        {
+            float currentDistance = Vector3.Distance(observation.selfPosition, observation.arenaCenter);
+            return currentDistance / observation.arenaRadius;
+        }
+        
+        /// <summary>
+        /// 복귀 필요 여부 확인 (실행하지 않고 조건만 검사)
+        /// </summary>
+        public bool NeedsReturn(GameObservation observation)
+        {
+            return CheckBasicConditions() && GetNormalizedDistance(observation) > safeDistance;
+        }
+        
+        /// <summary>
+        /// 안전 지역에 있는지 확인
+        /// </summary>
+        public bool IsInSafeZone(GameObservation observation)
+        {
+            return GetNormalizedDistance(observation) <= safeDistance;
+        }
+        
+        /// <summary>
+        /// 목표 지점까지의 거리 반환
+        /// </summary>
+        public float GetDistanceToTarget(GameObservation observation)
+        {
+            if (!isReturning) return 0f;
+            return Vector3.Distance(observation.selfPosition, targetPosition);
+        }
+        
+        /// <summary>
+        /// 예상 복귀 시간 계산 (초)
+        /// </summary>
+        public float GetEstimatedReturnTime(GameObservation observation, float moveSpeed = 1f)
+        {
+            if (IsInSafeZone(observation)) return 0f;
+            
+            float actualSpeed = moveSpeed * moveSpeedMultiplier;
+            float distanceToReturn = GetDistanceToTarget(observation);
+            
+            return distanceToReturn / Mathf.Max(actualSpeed, 0.1f);
+        }
+        
+        /// <summary>
+        /// 복귀 진행률 반환 (0.0 ~ 1.0)
+        /// </summary>
+        public float GetReturnProgress(GameObservation observation)
+        {
+            if (!isReturning) return 0f;
+            
+            float currentDistance = GetNormalizedDistance(observation);
+            float maxDistance = 1f; // 경계에서 시작
+            float targetDistance = safeDistance;
+            
+            if (currentDistance <= targetDistance) return 1f;
+            
+            float totalDistance = maxDistance - targetDistance;
+            float remainingDistance = currentDistance - targetDistance;
+            
+            return 1f - (remainingDistance / totalDistance);
+        }
+        
+        /// <summary>
+        /// 복귀 긴급도 반환 (0.0 ~ 1.0)
+        /// </summary>
+        public float GetReturnUrgency(GameObservation observation)
+        {
+            float normalized = GetNormalizedDistance(observation);
+            if (normalized <= safeDistance) return 0f;
+            
+            return (normalized - safeDistance) / (1f - safeDistance);
+        }
+        
+        /// <summary>
+        /// 현재 복귀 중인지 확인
+        /// </summary>
+        public bool IsReturning() => isReturning;
+        
+        /// <summary>
+        /// 현재 목표 위치 반환
+        /// </summary>
+        public Vector3 GetTargetPosition() => targetPosition;
+        
+        /// <summary>
+        /// 복귀 상태 강제 리셋
+        /// </summary>
+        public void ForceStopReturn()
+        {
+            isReturning = false;
+            consecutiveFailures = 0;
+            
+            if (enableLogging)
+                Debug.Log($"[{nodeName}] 복귀 강제 중단");
+        }
+        
+        /// <summary>
+        /// 노드 초기화
         /// </summary>
         public override void Initialize(AgentController controller)
         {
             base.Initialize(controller);
             isReturning = false;
+            consecutiveFailures = 0;
         }
+        
+        /// <summary>
+        /// 노드 리셋
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+            isReturning = false;
+            consecutiveFailures = 0;
+            targetPosition = Vector3.zero;
+        }
+        
+        /// <summary>
+        /// 상태 정보 문자열 (디버깅용)
+        /// </summary>
+        public override string GetStatusString()
+        {
+            return base.GetStatusString() + $", 안전거리: {safeDistance:F2}, 복귀중: {isReturning}, 실패: {consecutiveFailures}";
+        }
+        
+        #endregion
 
+        #region 시각적 디버깅
+        
         /// <summary>
         /// 시각적 디버깅을 위한 목표 위치 표시
         /// </summary>
@@ -158,6 +377,7 @@ namespace LJH.BT
                 Gizmos.DrawLine(point1, point2);
             }
         }
+        
+        #endregion
     }
 }
-
