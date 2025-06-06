@@ -30,6 +30,24 @@ namespace LJH.BT
                 return state;
             }
 
+            // 🎯 공격 전 적을 향해 즉시 회전
+            if (agentController != null && observation.distanceToEnemy <= attackRange)
+            {
+                Vector3 directionToEnemy = (observation.enemyPosition - observation.selfPosition).normalized;
+                if (directionToEnemy.magnitude > 0.1f)
+                {
+                    // Y축 제거 (평면 회전)
+                    directionToEnemy.y = 0;
+                    directionToEnemy = directionToEnemy.normalized;
+                    
+                    // 즉시 회전 (비동기 아님)
+                    Quaternion targetRotation = Quaternion.LookRotation(directionToEnemy);
+                    agentController.transform.rotation = targetRotation;
+                    
+                    Debug.Log($"{agentController.GetAgentName()} 공격 전 적 방향 회전 완료");
+                }
+            }
+
             // 공격 실행 (AgentController를 통해)
             if (agentController != null)
             {

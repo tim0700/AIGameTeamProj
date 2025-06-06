@@ -21,12 +21,12 @@ namespace LJH.BT
 
             // === 공통 시퀀스들 정의 ===
             
-            // 1. 안전 시스템 (최우선) - 아레나 경계
-            var boundaryCheck = new CheckArenaBoundaryNode(0.8f, 0.9f, 0.95f);
+            // 1. 안전 시스템 (극한 상황에서만) - 아레나 경계
+            var criticalBoundaryCheck = new CriticalBoundaryCheckNode(0.95f); // 95% 이상에서만 작동
             var returnToArena = new ReturnToArenaNodeBT(0.7f, 1.2f);
             var safetySequence = new SequenceNode(new List<BTNode> 
             { 
-                boundaryCheck, 
+                criticalBoundaryCheck, 
                 returnToArena 
             });
 
