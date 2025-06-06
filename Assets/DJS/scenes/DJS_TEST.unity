@@ -1239,6 +1239,7 @@ GameObject:
   - component: {fileID: 500225571}
   - component: {fileID: 500225570}
   - component: {fileID: 500225569}
+  - component: {fileID: 500225578}
   m_Layer: 0
   m_Name: Character2
   m_TagString: Untagged
@@ -1268,7 +1269,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 500225568}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b1ab953be0309a3469b5ffb956cf85ce, type: 3}
   m_Name: 
@@ -1281,6 +1282,8 @@ MonoBehaviour:
   opponent: {fileID: 5866666021731415936}
   rb: {fileID: 500225575}
   arenaCenter: {fileID: 650589378}
+  debugConsole: 1
+  debugEvery: 1
 --- !u!114 &500225571
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1294,7 +1297,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 13
+    VectorObservationSize: 25
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -1359,6 +1362,7 @@ MonoBehaviour:
   guardCooldownTime: 2.5
   dodgeCooldownTime: 5
   weaponObject: {fileID: 1507305749}
+  opponent: {fileID: 0}
 --- !u!114 &500225574
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1371,15 +1375,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24491222973d4c54b813346fd05c5f40, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
-  mouseSensitivity: 3
-  animator: {fileID: 500225576}
-  maxHP: 100
-  hpBarImage: {fileID: 1131230958}
-  attackCooldownOverlay: {fileID: 1820271001}
-  guardCooldownOverlay: {fileID: 415642084}
-  dodgeCooldownOverlay: {fileID: 1860297865}
-  weaponObject: {fileID: 1507305749}
 --- !u!54 &500225575
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1446,6 +1441,25 @@ Transform:
   - {fileID: 370389257}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
+--- !u!114 &500225578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 500225568}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c48941bfd974e64cbe8e281fca71929, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  self: {fileID: 500225573}
+  opponent: {fileID: 5866666021731415936}
+  rb: {fileID: 500225575}
 --- !u!1 &520573582
 GameObject:
   m_ObjectHideFlags: 0
@@ -5588,6 +5602,7 @@ GameObject:
   - component: {fileID: 5866666021731415938}
   - component: {fileID: 5866666021731415937}
   - component: {fileID: 5866666021731415939}
+  - component: {fileID: 5866666021731415940}
   m_Layer: 0
   m_Name: Character1
   m_TagString: Untagged
@@ -6671,15 +6686,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 24491222973d4c54b813346fd05c5f40, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 5
-  mouseSensitivity: 3
-  animator: {fileID: 5866666021731415933}
-  maxHP: 100
-  hpBarImage: {fileID: 1131230958}
-  attackCooldownOverlay: {fileID: 1820271001}
-  guardCooldownOverlay: {fileID: 415642084}
-  dodgeCooldownOverlay: {fileID: 1860297865}
-  weaponObject: {fileID: 1377399338}
 --- !u!136 &5866666021731415935
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -6727,6 +6733,7 @@ MonoBehaviour:
   guardCooldownTime: 2.5
   dodgeCooldownTime: 5
   weaponObject: {fileID: 1377399338}
+  opponent: {fileID: 0}
 --- !u!114 &5866666021731415937
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6734,7 +6741,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 919132149337700285}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: b1ab953be0309a3469b5ffb956cf85ce, type: 3}
   m_Name: 
@@ -6747,6 +6754,8 @@ MonoBehaviour:
   opponent: {fileID: 500225573}
   rb: {fileID: 182913775}
   arenaCenter: {fileID: 650589378}
+  debugConsole: 1
+  debugEvery: 1
 --- !u!114 &5866666021731415938
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6760,7 +6769,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_BrainParameters:
-    VectorObservationSize: 13
+    VectorObservationSize: 25
     NumStackedVectorObservations: 1
     m_ActionSpec:
       m_NumContinuousActions: 0
@@ -6793,6 +6802,26 @@ MonoBehaviour:
   DecisionPeriod: 5
   DecisionStep: 0
   TakeActionsBetweenDecisions: 1
+--- !u!114 &5866666021731415940
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 919132149337700285}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eece08e5b20544f92e832c52158a41, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  self: {fileID: 5866666021731415936}
+  opponent: {fileID: 500225573}
+  rb: {fileID: 182913775}
+  DidNotGetHitInLastAttack: 0
 --- !u!4 &6010502897159377797
 Transform:
   m_ObjectHideFlags: 0

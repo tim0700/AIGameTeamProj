@@ -1,6 +1,8 @@
+// ✅ PlayerRL.cs (공격/수비형 에이전트 연동을 위한 수정 포함)
 using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using Unity.MLAgents;
 
 public class PlayerRL : MonoBehaviour
 {
@@ -14,7 +16,7 @@ public class PlayerRL : MonoBehaviour
     [Header("체력")]
     public float maxHP = 100f;
     private float currentHP;
-    public Image hpBarImage; // 체력바 이미지 (width 조절용)
+    public Image hpBarImage;
     private RectTransform hpBarRect;
     private float hpBarMaxWidth;
 
@@ -26,21 +28,21 @@ public class PlayerRL : MonoBehaviour
     private RectTransform attackRect;
     private RectTransform guardRect;
     private RectTransform dodgeRect;
-    private float cooldownMaxHeight = 100f; // 오버레이의 기본 세로 크기(px)
+    private float cooldownMaxHeight = 100f;
 
     private Rigidbody rb;
     private float yRotation = 0f;
 
-    // 스킬별 쿨타임 타이머
     private float attackCooldown = 0f;
     private float guardCooldown = 0f;
     private float dodgeCooldown = 0f;
 
-    public float attackCooldownTime = 2.5f; // 접근 제한자 수정
-    public float guardCooldownTime = 2.5f; // 접근 제한자 수정
-    public float dodgeCooldownTime = 5.0f; // 접근 제한자 수정
+    // 스킬별 쿨타임 타이머
+    public float attackCooldownTime = 2.5f;
+    public float guardCooldownTime = 2.5f;
+    public float dodgeCooldownTime = 5.0f;
 
-    // 모션 락 (스킬 동작 중 이동/입력 불가)
+    // 모션 락(스킬 동작 중 이동, 입력 불가)
     private bool isActionPlaying = false;
 
     private const string ATTACK_CLIP = "HumanM@1HAttack01_R";
@@ -48,7 +50,7 @@ public class PlayerRL : MonoBehaviour
     private const string DODGE_CLIP  = "HumanM@Combat_TakeDamage01";
 
     [Header("무기 오브젝트 (칼 등)")]
-    public GameObject weaponObject; // 무기 오브젝트(콜라이더+isTrigger, 태그="Weapon")
+    public GameObject weaponObject;
     private Collider weaponCollider;
     private Coroutine attackCoroutine;
 
@@ -56,6 +58,18 @@ public class PlayerRL : MonoBehaviour
     private bool isInvincible = false;
     private float invincibleTimer = 0f;
     private float invincibleDuration = 2.0f;
+
+    public PlayerRL opponent; // ✅ 상대 참조
+
+    [Header("스킬 사용 시간 기록 (쿨타임 분석용)")]
+    private float lastGuardTime = -999f;
+    private float lastDodgeTime = -999f;
+    private float lastAttackTime = -999f;
+
+    [Header("외부 접근용: 최근 스킬 사용 시각 (읽기 전용)")]
+    public float LastAttackTime => lastAttackTime;
+    public float LastGuardTime => lastGuardTime;
+    public float LastDodgeTime => lastDodgeTime;
 
 
 
@@ -80,6 +94,7 @@ public class PlayerRL : MonoBehaviour
         SetupCooldownOverlay(attackCooldownOverlay, out attackRect);
         SetupCooldownOverlay(guardCooldownOverlay, out guardRect);
         SetupCooldownOverlay(dodgeCooldownOverlay, out dodgeRect);
+
 
         // 무기 콜라이더 참조 및 기본 비활성화
         if (weaponObject != null)
@@ -126,12 +141,6 @@ public class PlayerRL : MonoBehaviour
                 isInvincible = false;
         }
 
-        // 테스트용: Z키 누르면 데미지 10 (무적 중엔 무시)
-        if (Input.GetKeyDown(KeyCode.Z))
-        {
-            TakeDamage(10f);
-        }
-
         // 모션 락 중엔 추가 입력/이동 불가
         if (isActionPlaying) return;
 
@@ -156,47 +165,20 @@ public class PlayerRL : MonoBehaviour
         // 공격 입력 (좌클릭)
         if (Input.GetMouseButtonDown(0) && attackCooldown <= 0f)
         {
-            animator.SetTrigger("Attack");
-            attackCooldown = attackCooldownTime;
-            if (attackCooldownOverlay != null)
-            {
-                attackCooldownOverlay.SetActive(true);
-                SetOverlayHeight(attackRect, cooldownMaxHeight);
-            }
-            StartActionLock(GetCurrentAnimationLength(ATTACK_CLIP));
+            RL_Attack();
             usedSkill = true;
-
-            // 공격 애니메이션 시간 동안만 무기 콜라이더 활성화
-            if (attackCoroutine != null) StopCoroutine(attackCoroutine);
-            attackCoroutine = StartCoroutine(EnableWeaponColliderForDuration(GetCurrentAnimationLength(ATTACK_CLIP)));
         }
+
         // 방어 입력 (우클릭)
         else if (Input.GetMouseButtonDown(1) && guardCooldown <= 0f)
         {
-            animator.SetTrigger("Guard");
-            guardCooldown = guardCooldownTime;
-            if (guardCooldownOverlay != null)
-            {
-                guardCooldownOverlay.SetActive(true);
-                SetOverlayHeight(guardRect, cooldownMaxHeight);
-            }
-            StartActionLock(GetCurrentAnimationLength(GUARD_CLIP));
+            RL_Guard();
             usedSkill = true;
-            // 방어는 무기 콜라이더 불필요
         }
-        // 회피 입력 (E키)
         else if (Input.GetKeyDown(KeyCode.E) && dodgeCooldown <= 0f)
         {
-            animator.SetTrigger("Dodge");
-            dodgeCooldown = dodgeCooldownTime;
-            if (dodgeCooldownOverlay != null)
-            {
-                dodgeCooldownOverlay.SetActive(true);
-                SetOverlayHeight(dodgeRect, cooldownMaxHeight);
-            }
-            StartActionLock(GetCurrentAnimationLength(DODGE_CLIP));
+            RL_Dodge();
             usedSkill = true;
-            // 회피는 무기 콜라이더 불필요
         }
 
         // 스킬 입력시 즉시 이동 정지(velocity=0), 이하 입력 무시
@@ -212,7 +194,6 @@ public class PlayerRL : MonoBehaviour
 
     void FixedUpdate()
     {
-        // 스킬 모션 중엔 이동 강제 정지
         if (isActionPlaying)
         {
             rb.velocity = new Vector3(0, rb.velocity.y, 0);
@@ -263,7 +244,6 @@ public class PlayerRL : MonoBehaviour
     {
         var clip = System.Array.Find(animator.runtimeAnimatorController.animationClips, x => x.name == animClipName);
         if (clip != null) return clip.length;
-        // 없으면 기본값 0.7초로 처리
         return 0.7f;
     }
 
@@ -287,7 +267,6 @@ public class PlayerRL : MonoBehaviour
     IEnumerator EnableWeaponColliderForDuration(float duration)
     {
         EnableWeaponCollider();
-        // 실제 판정 타이밍(애니메이션 흐름에 따라 0.7~1.0배수 조절 가능)
         yield return new WaitForSeconds(duration * 0.7f);
         DisableWeaponCollider();
     }
@@ -315,7 +294,7 @@ public class PlayerRL : MonoBehaviour
     /// </summary>
     public void TakeDamage(float amount)
     {
-        if (isInvincible) return; // 무적 상태면 무시
+        if (isInvincible) return;
 
         currentHP -= amount;
         if (currentHP < 0) currentHP = 0;
@@ -328,15 +307,49 @@ public class PlayerRL : MonoBehaviour
     /// 무기에 맞을 때 피격 판정(25 데미지)
     /// </summary>
     void OnTriggerEnter(Collider other)
+    //공격자가 무기를 휘두르면 피격자의 onTriggerEnter() 호출.
     {
         if (other.CompareTag("Weapon"))
         {
             TakeDamage(25f);
+
+            if (other.transform.root.TryGetComponent<PlayerRL>(out var attacker))
+            //위의 if조건은 공격자의 컴포넌트를 찾는 코드
+            {
+                if (attacker == this) return;
+
+                if (attacker.TryGetComponent<PlayerRLAgent_Attack>(out var atkAgent))
+                //공격자 에이전트 객체를 atkAgent로 불러옴.
+                {
+                    atkAgent.RegisterAttack(25f); //이는 누적데미지나 행동 통계 기록용
+
+                    if (opponent != null) //공격 보상1. 상대가 스킬 쓴 후 쿨 중 공격 성공
+                        {
+                            float timeSinceGuard = Time.time - opponent.lastGuardTime;
+                            float timeSinceDodge = Time.time - opponent.lastDodgeTime;
+                            float timeSinceAttack = Time.time - opponent.lastAttackTime;
+
+                        // 스킬 사용 직후 1.0초 이내면, 빈틈을 찌른 것으로 판단
+                        if ((timeSinceGuard >= 0f && timeSinceGuard < 1.0f) ||
+                            (timeSinceDodge >= 0f && timeSinceDodge < 1.0f) ||
+                            (timeSinceAttack >= 0f && timeSinceAttack < 1.0f))
+                        {
+                            atkAgent.AddReward(+2f); // 빈틈 공격 성공 보상
+                            Debug.Log("[Reward1] 상대가 스킬 사용 직후(1초 이내)에 공격 성공");
+                            var sr = Unity.MLAgents.Academy.Instance.StatsRecorder;
+                            sr.Add("Attack/Reward/Reward1", 1f, StatAggregationMethod.MostRecent);
+                            }
+                        }                        
+                }
+
+                if (TryGetComponent<PlayerRLAgent_Defense>(out var defAgent))
+                {
+                    defAgent.RegisterDamage(25f); 
+                }
+            }
         }
     }
 
-    /* 클래스 맨 아래 쪽에 붙여 넣는다 */
-    //===== RL 인터페이스 =====//
     public float CurHP => currentHP;
     public float AttackCD => attackCooldown;
     public float GuardCD => guardCooldown;
@@ -347,11 +360,15 @@ public class PlayerRL : MonoBehaviour
     public bool CanDodge() => dodgeCooldown <= 0f && !isActionPlaying;
 
     /* 스킬을 외부에서 호출할 래퍼 */
+
     public void RL_Attack()
     {
-        if (!CanAttack()) return;
+        if (!CanAttack()) return; //공격 쿨타임 중이거나, 모션 락 상태면 공격 불가 → 함수 종료
+        lastAttackTime = Time.time; //시간기록
+
+
         animator.SetTrigger("Attack");
-        attackCooldown = attackCooldownTime;
+        attackCooldown = attackCooldownTime; //쿨다운 초기화 2.5초.
         if (attackCooldownOverlay != null)
         {
             attackCooldownOverlay.SetActive(true);
@@ -360,35 +377,61 @@ public class PlayerRL : MonoBehaviour
         StartActionLock(GetCurrentAnimationLength(ATTACK_CLIP));
         if (attackCoroutine != null) StopCoroutine(attackCoroutine);
         attackCoroutine = StartCoroutine(EnableWeaponColliderForDuration(GetCurrentAnimationLength(ATTACK_CLIP)));
+        // 일정 시간 동안만 무기 콜라이더가 켜짐 → 이 타이밍에 충돌하면 OnTriggerEnter() 발생
+
+        if (opponent != null && opponent.TryGetComponent<PlayerRLAgent_Defense>(out var defAgent))
+            defAgent.RegisterOpponentAttack();
+        // 방어 에이전트한테 상대가 공격했다는걸 알려줌 → 반격 조건 체크용
+
+        if (TryGetComponent<PlayerRLAgent_Defense>(out var myDefAgent))
+            myDefAgent.RegisterCounterAttackSuccess();
+        //자기 자신이 방어형 에이전트였다면, 이전에 회피/방어 성공 후 곧바로 공격에 성공한 경우 반격 보상이 있을 수 있음
     }
 
     public void RL_Guard()
     {
         if (!CanGuard()) return;
+        lastGuardTime = Time.time; //시간기록
+
         animator.SetTrigger("Guard");
-        guardCooldown = guardCooldownTime;
+        guardCooldown = guardCooldownTime; //방어 쿨타임 2.5초
         if (guardCooldownOverlay != null)
         {
             guardCooldownOverlay.SetActive(true);
             SetOverlayHeight(guardRect, cooldownMaxHeight);
         }
         StartActionLock(GetCurrentAnimationLength(GUARD_CLIP));
+
+        if (TryGetComponent<PlayerRLAgent_Defense>(out var defAgent))
+            defAgent.RegisterSuccessfulDefense("Guard");
     }
 
     public void RL_Dodge()
     {
         if (!CanDodge()) return;
+        lastDodgeTime = Time.time; //시간기록
+
+
         animator.SetTrigger("Dodge");
-        dodgeCooldown = dodgeCooldownTime;
+        dodgeCooldown = dodgeCooldownTime; //회피 쿨타임 5초
         if (dodgeCooldownOverlay != null)
         {
             dodgeCooldownOverlay.SetActive(true);
             SetOverlayHeight(dodgeRect, cooldownMaxHeight);
         }
         StartActionLock(GetCurrentAnimationLength(DODGE_CLIP));
+
+        if (TryGetComponent<PlayerRLAgent_Defense>(out var defAgent))
+            defAgent.RegisterSuccessfulDefense("Dodge");
+
+        //공격 보상3. 회피 직후 2초 이내 공격 성공, 회피 시도 시간 공격형에게 전달
+        if (TryGetComponent<PlayerRLAgent_Attack>(out var atkAgent))
+            atkAgent.RegisterDodge(); 
     }
 
-    /* 에피소드 초기화를 위한 리셋 */
+    /* 에피소드 초기화를 위한 리셋 
+    강화학습에서 한 번의 학습 에피소드가 끝나고 다음 에피소드를 시작하기 직전에 호출.
+    */
     public void ResetStatus()
     {
         currentHP = maxHP;
@@ -399,5 +442,5 @@ public class PlayerRL : MonoBehaviour
         rb.velocity = Vector3.zero;
         transform.localPosition = Vector3.zero;
     }
-
 }
+
