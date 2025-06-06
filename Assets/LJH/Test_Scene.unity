@@ -1412,6 +1412,10 @@ PrefabInstance:
       propertyPath: healthBar
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: attackDamage
+      value: 20
+      objectReference: {fileID: 0}
     - target: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Name
       value: Agent B
@@ -3898,6 +3902,10 @@ PrefabInstance:
     - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: healthBar
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: attackDamage
+      value: 20
       objectReference: {fileID: 0}
     - target: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Name
