@@ -4,7 +4,7 @@ namespace LJH.BT
 {
     /// <summary>
     /// 모든 BT 노드가 구현해야 하는 기본 인터페이스
-    /// 기존 BTNode 클래스와 호환성을 보장하면서 확장된 기능 제공
+    /// 기존 BTNode 클래스와 완전 호환성 보장
     /// </summary>
     public interface IBTNode
     {
@@ -26,41 +26,5 @@ namespace LJH.BT
         /// </summary>
         /// <returns>현재 노드 상태</returns>
         NodeState GetState();
-        
-        /// <summary>
-        /// 노드 이름 반환 (디버깅 및 로깅용)
-        /// </summary>
-        /// <returns>노드 이름</returns>
-        string GetNodeName();
-        
-        /// <summary>
-        /// 노드 메타데이터 반환 (ML 학습 및 성능 분석용)
-        /// </summary>
-        /// <returns>노드 메타데이터</returns>
-        NodeMetadata GetMetadata();
-        
-        /// <summary>
-        /// 메타데이터 업데이트 (통계 수집용)
-        /// </summary>
-        /// <param name="result">실행 결과</param>
-        /// <param name="executionTime">실행 시간 (ms)</param>
-        void UpdateMetadata(NodeState result, float executionTime);
-        
-        /// <summary>
-        /// 노드 리셋 (새 에피소드 시작시)
-        /// </summary>
-        void Reset();
-        
-        /// <summary>
-        /// 노드가 현재 활성화되어 있는지 확인
-        /// </summary>
-        /// <returns>활성화 여부</returns>
-        bool IsActive();
-        
-        /// <summary>
-        /// 노드 설명 반환 (디버깅용)
-        /// </summary>
-        /// <returns>노드 설명</returns>
-        string GetDescription();
     }
 }

@@ -9,7 +9,7 @@ namespace LJH.BT
         Failure
     }
 
-    public abstract class BTNode
+    public abstract class BTNode : IBTNode
     {
         protected NodeState state;
         protected AgentController agentController;
