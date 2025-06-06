@@ -9,18 +9,26 @@ namespace LJH.BT
     {
         private float threshold;
         private bool checkSelf;
+        private bool inverted;
 
-        public CheckHPNode(float threshold, bool checkSelf = true)
+        public CheckHPNode(float threshold, bool checkSelf = true, bool inverted = false)
         {
             this.threshold = threshold;
             this.checkSelf = checkSelf;
+            this.inverted = inverted;
         }
 
         public override NodeState Evaluate(GameObservation observation)
         {
             float currentHP = checkSelf ? observation.selfHP : observation.enemyHP;
             
-            if (currentHP <= threshold)
+            bool condition = currentHP <= threshold;
+            
+            // inverted 옵션에 따라 조건 반전
+            if (inverted)
+                condition = !condition;
+            
+            if (condition)
             {
                 state = NodeState.Success;
             }

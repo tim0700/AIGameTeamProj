@@ -4,90 +4,103 @@ using UnityEngine;
 namespace LJH.BT
 {
     /// <summary>
-    /// 수비형 BT 에이전트 - 방어 위주의 신중한 전략
+    /// 방어형 BT 에이전트 - 체력 기반 적응적 방어 전략
     /// </summary>
     public class DefensiveBTAgent : BTAgentBase
     {
-        [Header("수비형 설정")]
+        [Header("방어형 설정")]
         public float attackRange = 2f;
         public float detectionRange = 8f;
         public float preferredDistance = 4f;
-        public float counterAttackHPThreshold = 70f;
+        public float hpThreshold = 40f; // 체력 기반 패턴 변경 기준
 
         protected override void BuildBehaviorTree()
         {
-            agentName = "수비형 BT 에이전트";
+            agentName = "방어형 BT 에이전트";
             agentType = "BT-Defensive";
 
-            // 1. 안전 시스템 (최우선) - 아레나 경계 감지 및 복귀
-            var boundaryCheck = new CheckArenaBoundaryNode(0.8f, 0.9f, 0.95f); // 80%, 90%, 95% 경계
-            var returnToArena = new ReturnToArenaNodeBT(0.7f, 1.2f); // 70% 안전 지역, 1.2배 속도
+            // === 공통 시퀀스들 정의 ===
+            
+            // 1. 안전 시스템 (최우선) - 아레나 경계
+            var boundaryCheck = new CheckArenaBoundaryNode(0.8f, 0.9f, 0.95f);
+            var returnToArena = new ReturnToArenaNodeBT(0.7f, 1.2f);
             var safetySequence = new SequenceNode(new List<BTNode> 
             { 
                 boundaryCheck, 
                 returnToArena 
             });
 
-            // 2. 적이 가까이 있을 때 방어 행동
-            var enemyClose = new DetectEnemyNode(attackRange + 1f);
-            var checkDefendCooldown = new CheckCooldownNode(ActionType.Defend);
-            var defend = new DefendNode();
-            
-            var defendSequence = new SequenceNode(new List<BTNode> 
+            // 2. 공격 시퀀스 (공통)
+            var attackSequence = new SequenceNode(new List<BTNode> 
             { 
-                enemyClose, 
-                checkDefendCooldown, 
-                defend 
+                new DetectEnemyNode(attackRange + 1f),
+                new CheckCooldownNode(ActionType.Attack),
+                new MoveToEnemyNode(attackRange),
+                new AttackNode(attackRange)
             });
 
-            // 3. 적이 너무 가까우면 회피
-            var enemyTooClose = new DetectEnemyNode(attackRange);
-            var checkDodgeCooldown = new CheckCooldownNode(ActionType.Dodge);
-            var dodge = new DodgeNode();
-            
+            // 3. 방어 시퀀스 (공통)
+            var defenseSequence = new SequenceNode(new List<BTNode> 
+            { 
+                new DetectEnemyNode(attackRange + 1f),
+                new CheckCooldownNode(ActionType.Defend),
+                new DefendNode()
+            });
+
+            // 4. 회피 시퀀스 (공통)
             var dodgeSequence = new SequenceNode(new List<BTNode> 
             { 
-                enemyTooClose, 
-                checkDodgeCooldown, 
-                dodge 
+                new DetectEnemyNode(attackRange),
+                new CheckCooldownNode(ActionType.Dodge),
+                new DodgeNode()
             });
 
-            // 4. 반격 기회 포착 (상대 HP가 낮거나 자신의 HP가 높을 때)
-            var checkSelfHP = new CheckHPNode(counterAttackHPThreshold, true); // 자신 HP 70% 이상
-            var checkAttackCooldown = new CheckCooldownNode(ActionType.Attack);
-            var moveToAttack = new MoveToEnemyNode(attackRange);
-            var attack = new AttackNode(attackRange);
-            
-            // CheckHPNode는 threshold 이하일 때 Success를 반환하므로, 
-            // 반전 로직이 필요. 여기서는 단순화하여 적 HP가 낮을 때만 공격
-            var enemyLowHP = new CheckHPNode(40f, false); // 적 HP 40% 이하
-            
-            var counterAttackSequence = new SequenceNode(new List<BTNode> 
-            { 
-                enemyLowHP,
-                checkAttackCooldown, 
-                moveToAttack, 
-                attack 
+            // 5. 거리 유지 시퀀스
+            var maintainDistanceSequence = new SequenceNode(new List<BTNode>
+            {
+                new DetectEnemyNode(preferredDistance),
+                new MaintainDistanceNode(preferredDistance, 1f)
             });
 
-            // 5. 거리 유지 (수비형의 핵심 전략)
-            var maintainDistance = new MaintainDistanceNode(preferredDistance, 1f);
+            // 6. 안전 순찰
+            var safePatrol = new SafePatrolNode(2f, 0.7f); // 방어형은 더 신중하게
 
-            // 6. 안전 순찰 (아레나 경계 고려)
-            var patrol = new SafePatrolNode(2f, 0.7f); // 순찰 반경 2f, 아레나의 70% 내에서만 (수비형은 더 신중)
+            // === 체력 기반 패턴 ===
 
-            // 최종 트리 구성: 안전 > 회피 > 방어 > 반격 > 거리유지 > 순찰
+            // 고체력 패턴 (HP > 40%): 균형 잡힌 랜덤 전투
+            var highHPPattern = new SequenceNode(new List<BTNode>
+            {
+                new CheckHPNode(hpThreshold, true, true), // HP 40% 초과 확인 (inverted=true)
+                new RandomSelectorNode(new List<BTNode>
+                {
+                    attackSequence,           // 공격 (33%)
+                    defenseSequence,          // 방어 (33%)
+                    maintainDistanceSequence  // 거리 유지 (33%)
+                })
+            });
+
+            // 저체력 패턴 (HP ≤ 40%): 방어 우선 생존 전략
+            var lowHPPattern = new SequenceNode(new List<BTNode>
+            {
+                new CheckHPNode(hpThreshold, true, false), // HP 40% 이하 확인 (inverted=false)
+                new SelectorNode(new List<BTNode>
+                {
+                    defenseSequence,    // 방어 최우선
+                    dodgeSequence,      // 회피 우선  
+                    attackSequence     // 공격 기회
+                })
+            });
+
+            // === 최종 BT 구조 ===
             rootNode = new SelectorNode(new List<BTNode> 
             { 
-                safetySequence,       // 🆕 최우선 안전 시스템
-                dodgeSequence,        // 기존 회피
-                defendSequence,       // 기존 방어
-                counterAttackSequence, // 기존 반격
-                maintainDistance,     // 기존 거리 유지
-                patrol                // 기존 순찰
+                safetySequence,    // 아레나 안전 (최우선)
+                highHPPattern,     // 고체력: 균형 랜덤 전투
+                lowHPPattern,      // 저체력: 방어 우선 생존
+                safePatrol        // 🆕 기본 순찰 (fallback - 모든 조건 실패시)
             });
 
-            Debug.Log($"{agentName} BT 구조 생성 완료 (안전 시스템 포함)");
+            Debug.Log($"{agentName} BT 구조 생성 완료 - 체력 기반 패턴 ({hpThreshold}% 기준) + 기본 순찰");
         }
 
         public override void OnActionResult(ActionResult result)
@@ -106,7 +119,7 @@ namespace LJH.BT
                     break;
                 case ActionType.Attack:
                     if (result.success)
-                        Debug.Log($"{agentName} 반격 성공! 데미지: {result.damage}");
+                        Debug.Log($"{agentName} 공격 성공! 데미지: {result.damage}");
                     break;
             }
         }

@@ -418,7 +418,7 @@ MonoBehaviour:
   attackRange: 2
   detectionRange: 8
   preferredDistance: 4
-  counterAttackHPThreshold: 70
+  hpThreshold: 40
 --- !u!1 &176986488
 GameObject:
   m_ObjectHideFlags: 0
@@ -957,7 +957,7 @@ MonoBehaviour:
   agentType: BT
   attackRange: 2
   detectionRange: 8
-  emergencyHPThreshold: 30
+  hpThreshold: 40
 --- !u!1 &323051011
 GameObject:
   m_ObjectHideFlags: 0
@@ -1584,7 +1584,7 @@ Transform:
   m_GameObject: {fileID: 616053395}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 10, y: 0, z: 0}
+  m_LocalPosition: {x: 5, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -3034,7 +3034,7 @@ Transform:
   m_GameObject: {fileID: 1321996354}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -10, y: 0, z: 0}
+  m_LocalPosition: {x: -5, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
