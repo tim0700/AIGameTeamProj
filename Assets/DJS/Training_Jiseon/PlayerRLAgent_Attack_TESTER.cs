@@ -4,10 +4,10 @@ using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Sensors;
 using UnityEngine;
 
-public class PlayerRLAgent_Attack : Agent
+public class PlayerRLAgent_Attack_TESTER : Agent
 {
     public PlayerRL self;
-    public PlayerRL opponent;
+    public AgentController opponent;
     public Rigidbody rb;
 
     private float arenaHalf = 15f;
@@ -38,7 +38,7 @@ public class PlayerRLAgent_Attack : Agent
     public override void OnEpisodeBegin()
     {
         self.ResetStatus();
-        opponent.ResetStatus();
+        opponent.ResetAgent();
 
         self.transform.localPosition = new Vector3(-4, 0, 0);
         opponent.transform.localPosition = new Vector3(4, 0, 0);
@@ -76,10 +76,10 @@ public class PlayerRLAgent_Attack : Agent
         Vector3 rel = opponent.transform.localPosition - self.transform.localPosition;
         sensor.AddObservation(rel.x / arenaHalf);
         sensor.AddObservation(rel.z / arenaHalf);
-        sensor.AddObservation(opponent.CurHP / opponent.maxHP);
-        sensor.AddObservation(opponent.AttackCD / opponent.attackCooldownTime);
-        sensor.AddObservation(opponent.GuardCD / opponent.guardCooldownTime);
-        sensor.AddObservation(opponent.DodgeCD / opponent.dodgeCooldownTime);
+        sensor.AddObservation(opponent.GetCurrentHP() / opponent.maxHP);
+        sensor.AddObservation(opponent.attackCooldownTime / opponent.attackCooldownTime);
+        sensor.AddObservation(opponent.defendCooldownTime / opponent.defendCooldownTime);
+        sensor.AddObservation(opponent.dodgeCooldownTime / opponent.dodgeCooldownTime);
 
 
         // 상대 이동 속도
@@ -94,9 +94,9 @@ public class PlayerRLAgent_Attack : Agent
 
         // 최근 1초 이내 스킬 사용 여부
         float timeSinceOpponentSkill = Mathf.Min(
-            Time.time - opponent.LastAttackTime,
-            Time.time - opponent.LastGuardTime,
-            Time.time - opponent.LastDodgeTime
+            Time.time - opponent.attackCooldownTime,
+            Time.time - opponent.defendCooldownTime,
+            Time.time - opponent.dodgeCooldownTime
         );
         sensor.AddObservation(timeSinceOpponentSkill <= 1f ? 1f : 0f); 
 
@@ -192,7 +192,7 @@ public class PlayerRLAgent_Attack : Agent
         // 에피소드가 이미 끝났는지 확인 (중복 호출 방지)
         if (episodeEnded) return;
 
-        if (self.CurHP <= 0f || opponent.CurHP <= 0f)
+        if (self.CurHP <= 0f || opponent.GetCurrentHP() <= 0f)
         {
             EvaluateFinalPerformance(); // ✅ 성능 평가
             EndEpisode();               // ✅ 에피소드 종료
@@ -228,7 +228,7 @@ public class PlayerRLAgent_Attack : Agent
 
         var sr = Unity.MLAgents.Academy.Instance.StatsRecorder;
 
-        if (opponent.CurHP <= 0f) // 승리했을 때만 평가
+        if (opponent.GetCurrentHP() <= 0f) // 승리했을 때만 평가
         {
             if (hitRate >= 0.8f)
             {

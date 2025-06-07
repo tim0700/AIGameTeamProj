@@ -41,7 +41,7 @@ public class AgentController : MonoBehaviour
 
     // ���� ����
     private Rigidbody rb;
-    private AgentController enemy;
+    public AgentController enemy;
     private AgentState currentState = AgentState.Idle;
 
     // ��Ÿ�� ����
