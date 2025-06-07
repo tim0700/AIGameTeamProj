@@ -13,6 +13,21 @@ namespace LJH.BT
         public float detectionRange = 8f;
         public float hpThreshold = 40f; // 체력 기반 패턴 변경 기준
 
+        /// <summary>
+        /// 공격형 BT 구조 생성
+        /// 체력 기반 적응적 전략을 사용하는 공격적 AI
+        /// 
+        /// 전략 개요:
+        /// 1. 안전 시스템: 아레나 경계 안전 (최우선)
+        /// 2. 고체력 패턴 (40% 초과): 공격 우선 전략
+        /// 3. 저체력 패턴 (40% 이하): 랜덤 생존 전략
+        /// 4. 기본 순찰: 다른 행동 불가시 fallback
+        /// 
+        /// 특징:
+        /// - 체력 40% 기준으로 전략 전환
+        /// - 저체력시 예측 불가능한 랜덤 행동
+        /// - 안전한 아레나 순찰로 안정성 제공
+        /// </summary>
         protected override void BuildBehaviorTree()
         {
             agentName = "공격형 BT 에이전트";
