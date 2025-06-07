@@ -27,10 +27,9 @@ namespace LJH.BT
         protected System.Diagnostics.Stopwatch executionTimer;
         protected bool isInitialized = false;
         
-        // 캐싱 시스템 (ML-Agents 호환)
+        // 캐싱 시스템
         protected NodeState? cachedResult = null;
-        protected int lastCacheFrame = -1;
-        protected int cacheValidFrames = 6; // 기본 6프레임 (0.1초 @ 60fps)
+        protected float lastCacheTime = -1f;
         protected GameObservation lastObservation;
         
         // 디버깅 및 로깅
@@ -142,7 +141,7 @@ namespace LJH.BT
         {
             state = NodeState.Running;
             cachedResult = null;
-            lastCacheFrame = -1;
+            lastCacheTime = -1f;
             
             // 커스텀 리셋 로직
             OnReset();
@@ -197,17 +196,17 @@ namespace LJH.BT
         #region 캐싱 시스템
         
         /// <summary>
-        /// 캐시가 유효한지 확인 (ML-Agents 호환 - 프레임 기반)
+        /// 캐시가 유효한지 확인
         /// </summary>
         protected virtual bool IsCacheValid(GameObservation observation)
         {
             if (!enableCaching || !cachedResult.HasValue) return false;
             
-            int currentFrame = Time.frameCount;
-            bool frameValid = (currentFrame - lastCacheFrame) < cacheValidFrames;
+            float currentTime = Time.time;
+            bool timeValid = (currentTime - lastCacheTime) < cacheValidDuration;
             bool observationSimilar = IsObservationSimilar(observation, lastObservation);
             
-            return frameValid && observationSimilar;
+            return timeValid && observationSimilar;
         }
         
         /// <summary>
@@ -223,12 +222,12 @@ namespace LJH.BT
         }
         
         /// <summary>
-        /// 캐시 업데이트 (ML-Agents 호환 - 프레임 기반)
+        /// 캐시 업데이트
         /// </summary>
         protected virtual void UpdateCache(GameObservation observation, NodeState result)
         {
             cachedResult = result;
-            lastCacheFrame = Time.frameCount;
+            lastCacheTime = Time.time;
             lastObservation = observation;
         }
         
@@ -260,21 +259,6 @@ namespace LJH.BT
             enableDetailedLogging = enable;
         }
         
-        /// <summary>
-        /// 캐시 유효 시간 설정 (ML-Agents 호환 - 프레임 기반)
-        /// </summary>
-        /// <param name="seconds">초 단위 시간</param>
-        /// <param name="targetFPS">대상 FPS (기본 60)</param>
-        public virtual void SetCacheValidDuration(float seconds, float targetFPS = 60f)
-        {
-            cacheValidFrames = Mathf.RoundToInt(seconds * targetFPS);
-            
-            if (enableDetailedLogging)
-            {
-                Debug.Log($"[{nodeName}] 캐시 유효 시간 변경: {seconds}초 ({cacheValidFrames} 프레임)");
-            }
-        }
-        
         #endregion
         
         #region 가상 메서드들 (하위 클래스에서 오버라이드 가능)
@@ -301,27 +285,6 @@ namespace LJH.BT
         /// 노드 타입 반환 (하위 클래스에서 구현)
         /// </summary>
         protected abstract string GetNodeType();
-        
-        /// <summary>
-        /// 현재 캐시 상태 확인 (디버깅용)
-        /// </summary>
-        public virtual bool HasValidCache(GameObservation observation)
-        {
-            return IsCacheValid(observation);
-        }
-        
-        /// <summary>
-        /// 캐시 통계 반환 (디버깅용)
-        /// </summary>
-        public virtual string GetCacheStats()
-        {
-            if (!enableCaching) return "캐싱 비활성화";
-            
-            bool hasCache = cachedResult.HasValue;
-            int framesSinceCache = hasCache ? (Time.frameCount - lastCacheFrame) : -1;
-            
-            return $"캐시: {(hasCache ? "있음" : "없음")}, 프레임차이: {framesSinceCache}, 유효프레임: {cacheValidFrames}";
-        }
         
         #endregion
         
@@ -369,14 +332,6 @@ namespace LJH.BT
                 inspectorMetadata.UpdateFrom(metadata);
             }
             #endif
-        }
-        
-        /// <summary>
-        /// 노드 상태 문자열 반환 (디버깅용)
-        /// </summary>
-        public virtual string GetStatusString()
-        {
-            return $"상태: {state}, 활성: {IsActive()}, {GetCacheStats()}";
         }
         
         #endregion
