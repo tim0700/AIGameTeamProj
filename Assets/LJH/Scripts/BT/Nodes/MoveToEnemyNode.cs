@@ -37,7 +37,7 @@ namespace LJH.BT
                 if (result.success)
                 {
                     state = NodeState.Running; // 계속 이동 중
-                    Debug.Log($"{agentController.GetAgentName()} 적에게 이동 중... 거리: {observation.distanceToEnemy:F2}");
+                    //Debug.Log($"{agentController.GetAgentName()} 적에게 이동 중... 거리: {observation.distanceToEnemy:F2}");
                 }
                 else
                 {

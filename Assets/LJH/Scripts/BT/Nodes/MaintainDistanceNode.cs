@@ -41,12 +41,12 @@ namespace LJH.BT
                     lastMoveDirection = moveDirection;
                     lastMoveTime = Time.time;
                     state = NodeState.Running;
-                    Debug.Log($"{agentController.GetAgentName()} 스마트 거리 유지 이동: {moveDirection}");
+                    //Debug.Log($"{agentController.GetAgentName()} 스마트 거리 유지 이동: {moveDirection}");
                 }
                 else
                 {
                     state = NodeState.Failure;
-                    Debug.LogWarning($"{agentController.GetAgentName()} 거리 유지 이동 실패");
+                    //Debug.LogWarning($"{agentController.GetAgentName()} 거리 유지 이동 실패");
                 }
             }
             else

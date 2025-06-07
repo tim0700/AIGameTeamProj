@@ -9,6 +9,9 @@ public class PlayerRL : MonoBehaviour
     [Header("이동/입력 세팅")]
     public float moveSpeed = 5f;
     public float mouseSensitivity = 3f;
+    
+    [Header("공격력 설정")]
+    public float attackDamage = 25f; // RL 에이전트의 공격력
 
     [Header("애니메이터")]
     public Animator animator;
@@ -294,12 +297,32 @@ public class PlayerRL : MonoBehaviour
     }
 
     /// <summary>
-    /// 무기 콜라이더 활성화
+    /// 무기 콜라이더 활성화 및 데미지 설정
     /// </summary>
     void EnableWeaponCollider()
     {
         if (weaponCollider != null)
+        {
             weaponCollider.enabled = true;
+            
+            // WeaponDamage 컴포넌트 설정
+            WeaponDamage weaponDmg = weaponObject.GetComponent<WeaponDamage>();
+            if (weaponDmg == null)
+            {
+                weaponDmg = weaponObject.AddComponent<WeaponDamage>();
+            }
+            
+            // AgentController가 있으면 그 데미지 사용, 없으면 PlayerRL의 attackDamage 사용
+            float damageAmount = attackDamage; // PlayerRL의 공격력 사용
+            AgentController agentCtrl = GetComponent<AgentController>();
+            if (agentCtrl != null)
+            {
+                damageAmount = agentCtrl.attackDamage; // AgentController가 있으면 우선
+            }
+            
+            weaponDmg.SetDamage(damageAmount, agentCtrl);
+            Debug.Log($"[PlayerRL] {gameObject.name} 무기 데미지 설정: {damageAmount}");
+        }
     }
 
     /// <summary>
@@ -326,14 +349,33 @@ public class PlayerRL : MonoBehaviour
     }
 
     /// <summary>
-    /// 무기에 맞을 때 피격 판정(25 데미지)
+    /// 무기에 맞을 때 피격 판정 (동적 데미지 지원)
     /// </summary>
     void OnTriggerEnter(Collider other)
     //공격자가 무기를 휘두르면 피격자의 onTriggerEnter() 호출.
     {
         if (other.CompareTag("Weapon"))
         {
-            TakeDamage(25f);
+            // WeaponDamage 컴포넌트에서 데미지 정보 가져오기
+            float actualDamage = 25f; // 기본 데미지 (fallback)
+            AgentController weaponOwner = null;
+            
+            WeaponDamage weaponDmg = other.GetComponent<WeaponDamage>();
+            if (weaponDmg != null)
+            {
+                actualDamage = weaponDmg.GetDamage();
+                weaponOwner = weaponDmg.GetOwner();
+                if (weaponOwner != null)
+                {
+                    Debug.Log($"[PlayerRL] {weaponOwner.GetAgentName()}이(가) {gameObject.name}을(를) 공격! 데미지: {actualDamage}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[PlayerRL] WeaponDamage 컴포넌트를 찾을 수 없음. 기본 데미지 {actualDamage} 사용");
+            }
+            
+            TakeDamage(actualDamage);
 
             if (other.transform.root.TryGetComponent<PlayerRL>(out var attacker))
             //위의 if조건은 공격자의 컴포넌트를 찾는 코드
@@ -343,7 +385,7 @@ public class PlayerRL : MonoBehaviour
                 if (attacker.TryGetComponent<PlayerRLAgent_Attack>(out var atkAgent))
                 //공격자 에이전트 객체를 atkAgent로 불러옴.
                 {
-                    atkAgent.RegisterAttack(25f); //이는 누적데미지나 행동 통계 기록용
+                    atkAgent.RegisterAttack(actualDamage); //실제 데미지 값으로 누적데미지나 행동 통계 기록
 
                     if (opponent != null) //공격 보상1. 상대가 스킬 쓴 후 쿨 중 공격 성공
                         {
@@ -366,7 +408,7 @@ public class PlayerRL : MonoBehaviour
 
                 if (TryGetComponent<PlayerRLAgent_Defense>(out var defAgent))
                 {
-                    defAgent.RegisterDamage(25f); 
+                    defAgent.RegisterDamage(actualDamage); //실제 데미지 값으로 기록
                 }
             }
         }

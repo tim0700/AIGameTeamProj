@@ -32,11 +32,12 @@ public class AgentController : MonoBehaviour
 
     [Header("���� ����")]
     public float attackRange = 2f;
-    public float attackDamage = 25f;
+    public float attackDamage = 20f;
 
     [Header("���� �ý���")]
     public GameObject weaponObject; // ���� ������Ʈ(�ݶ��̴�+isTrigger, �±�="Weapon")
     private Collider weaponCollider;
+    private WeaponDamage weaponDamage; // 무기 데미지 컴포넌트
     private Coroutine attackCoroutine;
 
     // ���� ����
@@ -63,11 +64,38 @@ public class AgentController : MonoBehaviour
 
         currentHP = maxHP;
 
-        // ���� �ݶ��̴� ���� �� �⺻ ��Ȱ��ȭ
-        // if (weaponObject != null)
-            weaponCollider = weaponObject.GetComponent<Collider>();
-        if (weaponCollider != null)
-            weaponCollider.enabled = false;
+        // 모든 "Weapon" 태그를 가진 자식 오브젝트에 WeaponDamage 추가
+        GameObject[] allWeapons = GameObject.FindGameObjectsWithTag("Weapon");
+        foreach (var weapon in allWeapons)
+        {
+            // 자신의 자식 오브젝트인지 확인
+            if (weapon.transform.IsChildOf(transform))
+            {
+                // WeaponDamage 컴포넌트 확인 및 추가
+                WeaponDamage weaponDmg = weapon.GetComponent<WeaponDamage>();
+                if (weaponDmg == null)
+                {
+                    weaponDmg = weapon.AddComponent<WeaponDamage>();
+                    Debug.Log($"[AgentController] {agentName}의 {weapon.name}에 WeaponDamage 컴포넌트 추가");
+                }
+                
+                // 첫 번째 무기를 메인 무기로 설정 (기존 코드 호환성을 위해)
+                if (weaponObject == null)
+                {
+                    weaponObject = weapon;
+                    weaponCollider = weapon.GetComponent<Collider>();
+                    if (weaponCollider != null)
+                        weaponCollider.enabled = false;
+                    weaponDamage = weaponDmg;
+                    Debug.Log($"[AgentController] {agentName}의 메인 무기로 {weapon.name} 설정");
+                }
+            }
+        }
+        
+        if (weaponObject == null)
+        {
+            Debug.LogWarning($"[AgentController] {agentName}의 무기를 찾을 수 없습니다!");
+        }
     }
 
     void Start()
@@ -78,6 +106,8 @@ public class AgentController : MonoBehaviour
         {
             SetAgent(foundAgent);
         }
+        
+        Debug.Log($"[AgentController] {agentName} 초기화 완료 - weaponObject: {weaponObject?.name}, attackDamage: {attackDamage}");
     }
 
     void Update()
@@ -477,8 +507,36 @@ public class AgentController : MonoBehaviour
     /// </summary>
     private void EnableWeaponCollider()
     {
+        // 모든 자식 무기에 데미지 설정
+        GameObject[] allWeapons = GameObject.FindGameObjectsWithTag("Weapon");
+        foreach (var weapon in allWeapons)
+        {
+            if (weapon.transform.IsChildOf(transform))
+            {
+                Collider weaponCol = weapon.GetComponent<Collider>();
+                if (weaponCol != null)
+                {
+                    weaponCol.enabled = true;
+                }
+                
+                WeaponDamage weaponDmg = weapon.GetComponent<WeaponDamage>();
+                if (weaponDmg != null)
+                {
+                    weaponDmg.SetDamage(attackDamage, this);
+                    Debug.Log($"[AgentController] {agentName}의 {weapon.name} 데미지 설정: {attackDamage}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[AgentController] {weapon.name}에 WeaponDamage 컴포넌트가 없습니다!");
+                }
+            }
+        }
+        
+        // 기존 코드 호환성을 위해 메인 weaponCollider도 처리
         if (weaponCollider != null)
+        {
             weaponCollider.enabled = true;
+        }
     }
 
     /// <summary>
@@ -486,6 +544,21 @@ public class AgentController : MonoBehaviour
     /// </summary>
     private void DisableWeaponCollider()
     {
+        // 모든 자식 무기 비활성화
+        GameObject[] allWeapons = GameObject.FindGameObjectsWithTag("Weapon");
+        foreach (var weapon in allWeapons)
+        {
+            if (weapon.transform.IsChildOf(transform))
+            {
+                Collider weaponCol = weapon.GetComponent<Collider>();
+                if (weaponCol != null)
+                {
+                    weaponCol.enabled = false;
+                }
+            }
+        }
+        
+        // 기존 코드 호환성을 위해 메인 weaponCollider도 처리
         if (weaponCollider != null)
             weaponCollider.enabled = false;
     }
@@ -497,8 +570,25 @@ public class AgentController : MonoBehaviour
     {
         if (other.CompareTag("Weapon") && !isInvincible)
         {
-            TakeDamage(25f);
-            Debug.Log($"{agentName} ���⿡ �ǰ�! ������: 25");
+            // WeaponDamage 컴포넌트에서 데미지 정보 가져오기
+            WeaponDamage weaponDmg = other.GetComponent<WeaponDamage>();
+            float damage = 20f; // 기본 데미지 (fallback)
+            
+            if (weaponDmg != null)
+            {
+                damage = weaponDmg.GetDamage();
+                AgentController attacker = weaponDmg.GetOwner();
+                if (attacker != null)
+                {
+                    Debug.Log($"[AgentController] {attacker.GetAgentName()}이(가) {agentName}을(를) 공격! 데미지: {damage}");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[AgentController] {other.name}에서 WeaponDamage 컴포넌트를 찾을 수 없음. 기본 데미지 {damage} 사용");
+            }
+            
+            TakeDamage(damage);
         }
     }
 

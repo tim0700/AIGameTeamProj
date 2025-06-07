@@ -131,7 +131,7 @@ namespace LJH.BT
                 Debug.LogWarning("[SafePatrol] 안전한 순찰 지점을 찾지 못해 중심 방향으로 설정");
             }
             
-            Debug.Log($"[SafePatrol] 새 순찰 목표 설정: {patrolTarget}");
+            //Debug.Log($"[SafePatrol] 새 순찰 목표 설정: {patrolTarget}");
         }
 
         /// <summary>

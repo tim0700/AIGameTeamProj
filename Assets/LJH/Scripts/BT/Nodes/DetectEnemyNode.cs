@@ -19,7 +19,7 @@ namespace LJH.BT
             if (observation.distanceToEnemy <= detectionRange)
             {
                 state = NodeState.Success;
-                Debug.Log($"적 감지됨! 거리: {observation.distanceToEnemy:F2}");
+                //Debug.Log($"적 감지됨! 거리: {observation.distanceToEnemy:F2}");
             }
             else
             {

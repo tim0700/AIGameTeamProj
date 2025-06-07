@@ -1034,6 +1034,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 323051011}
   m_CullTransparentMesh: 1
+--- !u!1 &346911754 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7740235853413739476, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+  m_PrefabInstance: {fileID: 2101856490}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &347887670
 GameObject:
   m_ObjectHideFlags: 0
@@ -1306,6 +1311,9 @@ MonoBehaviour:
   uiManager: {fileID: 978054167}
   arenaCenter: {x: 0, y: 0, z: 0}
   arenaRadius: 15
+  isTrainingMode: 0
+  autoRestartDelay: 2
+  maxTrainingEpisodes: 0
 --- !u!4 &550260638
 Transform:
   m_ObjectHideFlags: 0
@@ -1396,6 +1404,11 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 558151376}
   m_CullTransparentMesh: 1
+--- !u!1 &570380818 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7740235853413739476, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+  m_PrefabInstance: {fileID: 587279387}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &587279387
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1404,6 +1417,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: enemy
+      value: 
+      objectReference: {fileID: 175257505}
     - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: agentName
       value: "\uC218\uBE44\uD615 AI"
@@ -1416,6 +1433,10 @@ PrefabInstance:
       propertyPath: attackDamage
       value: 20
       objectReference: {fileID: 0}
+    - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: weaponObject
+      value: 
+      objectReference: {fileID: 570380818}
     - target: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Name
       value: Agent B
@@ -1460,7 +1481,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2073069667564587974, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
@@ -3896,6 +3918,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: enemy
+      value: 
+      objectReference: {fileID: 175257505}
+    - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: agentName
       value: "\uACF5\uACA9\uD615 AI"
       objectReference: {fileID: 0}
@@ -3907,6 +3933,10 @@ PrefabInstance:
       propertyPath: attackDamage
       value: 20
       objectReference: {fileID: 0}
+    - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: weaponObject
+      value: 
+      objectReference: {fileID: 346911754}
     - target: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Name
       value: Agent A
@@ -3951,7 +3981,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2073069667564587974, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
