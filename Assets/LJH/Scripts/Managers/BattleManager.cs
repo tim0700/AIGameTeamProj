@@ -24,6 +24,14 @@ public class BattleManager : MonoBehaviour
     [Header("�Ʒ��� ����")]
     public Vector3 arenaCenter = Vector3.zero;
     public float arenaRadius = 10f;
+    
+    [Header("ML 학습 설정")]
+    [Tooltip("체크하면 전투 종료 후 자동으로 다음 라운드 시작 (ML 학습용)")]
+    public bool isTrainingMode = false;
+    [Tooltip("자동 재시작까지의 딜레이 시간 (초)")]
+    public float autoRestartDelay = 2f;
+    [Tooltip("최대 연속 전투 횟수 (0 = 무제한)")]
+    public int maxTrainingEpisodes = 0;
 
     // ���� ����
     private bool battleActive = false;
@@ -233,6 +241,22 @@ public class BattleManager : MonoBehaviour
 
         // ������ ���� (���� CSV ���� ��� �߰� ����)
         SaveBattleData(currentBattleData);
+        
+        // 🤖 ML 학습 모드에서 자동 재시작
+        if (isTrainingMode)
+        {
+            // 최대 에피소드 수 체크
+            if (maxTrainingEpisodes > 0 && battleCount >= maxTrainingEpisodes)
+            {
+                Debug.Log($"ML 학습 완료: {battleCount}번의 전투 완료");
+                isTrainingMode = false; // 학습 모드 종료
+            }
+            else
+            {
+                Debug.Log($"ML 학습 모드: {autoRestartDelay}초 후 자동 재시작... ({battleCount}/{(maxTrainingEpisodes > 0 ? maxTrainingEpisodes.ToString() : "∞")})");
+                StartCoroutine(AutoRestartBattle());
+            }
+        }
     }
 
     public void ResetBattle()
@@ -280,6 +304,45 @@ public class BattleManager : MonoBehaviour
         // TODO: CSV ���Ϸ� �����ϴ� ��� �߰� ����
     }
 
+    /// <summary>
+    /// 🤖 ML 학습용 자동 재시작 코루틴
+    /// </summary>
+    private IEnumerator AutoRestartBattle()
+    {
+        // 딜레이 대기
+        yield return new WaitForSeconds(autoRestartDelay);
+        
+        // 여전히 학습 모드인지 확인 (중간에 변경될 수 있음)
+        if (!isTrainingMode)
+        {
+            Debug.Log("학습 모드가 비활성화되어 자동 재시작을 취소합니다.");
+            yield break;
+        }
+        
+        // 만약 전투가 아직 진행 중이면 재시작하지 않음
+        if (battleActive)
+        {
+            Debug.LogWarning("전투가 아직 진행 중이므로 재시작을 건너띷니다.");
+            yield break;
+        }
+        
+        Debug.Log("🔄 ML 학습 모드: 자동 전투 재시작!");
+        
+        // 리셋 후 시작
+        ResetBattle();
+        yield return new WaitForSeconds(0.5f); // 리셋이 완료될 때까지 짧은 대기
+        StartBattle();
+    }
+    
+    /// <summary>
+    /// ML 학습 모드 수동 제어 메서드
+    /// </summary>
+    public void SetTrainingMode(bool enable)
+    {
+        isTrainingMode = enable;
+        Debug.Log($"ML 학습 모드: {(enable ? "활성화" : "비활성화")}");
+    }
+    
     /// <summary>
     /// 현재 전투 시간 반환 (UI에서 사용)
     /// </summary>

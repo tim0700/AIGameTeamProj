@@ -46,19 +46,9 @@ public class BattleUIManager : MonoBehaviour
     // UI 업데이트 빈도 제어
     private float uiUpdateInterval = 0.1f;
     private float lastUIUpdate = 0f;
-
-    // //~~~조익준 자동화 코드~~~~//
-    // public void AutoRestartBattle()
-    // {
-    //     StartCoroutine(RestartBattleCoroutine());
-    // }
-
-    // private IEnumerator RestartBattleCoroutine()
-    // {
-    //     yield return new WaitForSeconds(1.0f); 
-    //     battleManager.ResetBattle();
-    //     battleManager.StartBattle();
-    // } //~~조익준
+    
+    // ML 학습 모드 지원
+    private bool lastTrainingModeState = false;
 
 
     void Start()
@@ -100,6 +90,9 @@ public class BattleUIManager : MonoBehaviour
 
         // 타이머 업데이트 (항상 업데이트)
         UpdateBattleTimer();
+        
+        // 🤖 ML 학습 모드 상태 체크 및 UI 조정
+        CheckTrainingModeChanges();
 
         // 전투 중일 때만 실시간 UI 업데이트
         if (battleManager != null && currentAgentA != null && currentAgentB != null)
@@ -190,6 +183,12 @@ public class BattleUIManager : MonoBehaviour
         UpdateBattleStatusText($"Battle End - {winnerName} Wins!");
 
         Debug.Log($"BattleUIManager: Battle Result Display Complete - {winnerName}");
+        
+        // 🤖 ML 학습 모드에서는 결과 패널을 짧게 표시후 자동 닫기
+        if (battleManager != null && battleManager.isTrainingMode)
+        {
+            StartCoroutine(AutoHideResultInTrainingMode());
+        }
     }
 
     /// <summary>
@@ -219,6 +218,34 @@ public class BattleUIManager : MonoBehaviour
     #region Private Methods
 
     /// <summary>
+    /// 🤖 ML 학습 모드 상태 변화 감지 및 UI 조정
+    /// </summary>
+    private void CheckTrainingModeChanges()
+    {
+        if (battleManager == null) return;
+        
+        bool currentTrainingMode = battleManager.isTrainingMode;
+        
+        // 학습 모드 상태가 변경된 경우
+        if (currentTrainingMode != lastTrainingModeState)
+        {
+            lastTrainingModeState = currentTrainingMode;
+            
+            // 학습 모드에 따른 UI 조정
+            if (battleControlPanel != null)
+            {
+                // 학습 모드일 때 수동 버튼 비활성화
+                if (startBattleButton != null)
+                    startBattleButton.interactable = !currentTrainingMode;
+                    
+                // 리셋 버튼은 학습 모드에서도 사용 가능 (긴급 중단용)
+            }
+            
+            Debug.Log($"UI: ML 학습 모드 {(currentTrainingMode ? "활성화" : "비활성화")} - UI 조정 완료");
+        }
+    }
+    
+    /// <summary>
     /// 전투 타이머 업데이트 (항상 업데이트)
     /// </summary>
     private void UpdateBattleTimer()
@@ -226,7 +253,8 @@ public class BattleUIManager : MonoBehaviour
         if (battleTimerText == null || battleManager == null) return;
 
         float battleTime = battleManager.GetCurrentBattleTime();
-        battleTimerText.text = $"Battle Time: {battleTime:F1}s";
+        string trainingStatus = battleManager.isTrainingMode ? " [🤖 ML 학습]" : "";
+        battleTimerText.text = $"Battle Time: {battleTime:F1}s{trainingStatus}";
     }
 
     /// <summary>
@@ -342,6 +370,43 @@ public class BattleUIManager : MonoBehaviour
         Debug.Log("BattleUIManager: Result Panel Closed");
     }
 
+    #endregion
+    
+    #region ML Training Mode Support
+    
+    /// <summary>
+    /// 🤖 ML 학습 모드에서 결과 패널 자동 숨김 코루틴
+    /// </summary>
+    private IEnumerator AutoHideResultInTrainingMode()
+    {
+        // 1.5초 후 결과 패널 자동 닫기
+        yield return new WaitForSeconds(1.5f);
+        
+        if (resultController != null)
+            resultController.HideResult();
+            
+        Debug.Log("🤖 ML 학습 모드: 결과 패널 자동 닫기");
+    }
+    
+    /// <summary>
+    /// 🤖 ML 학습 모드 토글 (외부에서 호출 가능)
+    /// </summary>
+    public void ToggleTrainingMode()
+    {
+        if (battleManager != null)
+        {
+            battleManager.SetTrainingMode(!battleManager.isTrainingMode);
+        }
+    }
+    
+    /// <summary>
+    /// 현재 학습 모드 상태 반환
+    /// </summary>
+    public bool IsTrainingMode()
+    {
+        return battleManager != null && battleManager.isTrainingMode;
+    }
+    
     #endregion
 
     #region Public Utility Methods
