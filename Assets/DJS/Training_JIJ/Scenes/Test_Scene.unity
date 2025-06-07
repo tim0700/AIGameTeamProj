@@ -1423,6 +1423,9 @@ MonoBehaviour:
   uiManager: {fileID: 978054167}
   arenaCenter: {x: 0, y: 0, z: 0}
   arenaRadius: 15
+  isTrainingMode: 1
+  autoRestartDelay: 2
+  maxTrainingEpisodes: 0
 --- !u!4 &550260638
 Transform:
   m_ObjectHideFlags: 0
