@@ -61,6 +61,8 @@ public class RL_AttackAgent : RLAgentBase
         prevEnemyHP = enemyHP;
     }
 
+
+
     /* --------------------------------------------------------------------- */
     public override void OnActionReceived(ActionBuffers act)
     {
@@ -79,34 +81,37 @@ public class RL_AttackAgent : RLAgentBase
 
             float currDist = Vector3.Distance(selfPos, enemyPos);
 
-            float delta = prevDist - currDist;
-            if (delta > 0.01f) AddReward(delta * approachReward);
+            float delta = prevDist - currDist;          // + : 가까워짐, – : 멀어짐
+            if (Mathf.Abs(delta) > 0.01f)
+            {
+                float stepReward = delta > 0          // 접근
+                    ? 0.10f * delta                  // +0.10 × 줄어든 m
+                    : -0.10f * (-delta);              // 후퇴엔 동등 패널티
+                AddReward(stepReward);
+            }
             prevDist = currDist;
 
             /* ② 초근접 지수 보상 */
-            AddReward(Mathf.Exp(-8f * currDist) * 0.08f);
+            AddReward(Mathf.Exp(-6f * currDist) * 0.08f);
+
+            if (currDist > 0.8f)           // 0.8 m 초과 구간만
+            {
+                float distPenalty = (currDist - 0.8f) * -0.02f;
+                AddReward(distPenalty);    // 멀수록 계속 손해
+            }
 
             /* 2) 헛손질 패널티 */
             if (act.DiscreteActions[0] == 5 && currDist > 1.2f)
                 AddReward(outOfRangePenalty);
 
-            /* ★★  여기 한 줄 추가  ── 초근접 보상 ★★ */
-            float closeBonus = Mathf.Exp(-4f * currDist) * 0.04f;  // 0.1 m ≈ +0.029
-            AddReward(closeBonus);
-
             /* 3) 가까이 보정된 facing 보상(기존 0.005 → 0.02) */
             Vector3 dir = (enemyPos - selfPos).normalized;
             float facing = 1f - Vector3.Angle(transform.forward, dir) / 180f;
             AddReward(0.04f * facing);
-        }
 
-        /* 4) 멀리서 Idle 패널티  */
-        if (act.DiscreteActions[0] == 0)          // Idle
-        {
-            float dist = prevDist;                // prevDist 는 직전에 업데이트됨
-            if (dist > 1.0f)
-                AddReward(-0.07f);
+            /* 4) Idle 패널티 -- 1 m 밖에서만 손해 */
+            if (act.DiscreteActions[0] == 0 && currDist > 1.0f)
+                AddReward(-0.08f);    // 붙었는데 가만있으면 0, 멀리 Idle 은 –0.05
         }
-
     }
 }
