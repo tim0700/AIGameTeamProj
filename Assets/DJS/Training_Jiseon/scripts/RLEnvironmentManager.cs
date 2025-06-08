@@ -51,6 +51,7 @@ public class RLEnvironmentManager : MonoBehaviour
     /* ───────────────── RL 쪽만 리셋 ───────────────── */
     void ResetEpisode()
     {
+        btAgent.ResetAgent();
         rlAgent.transform.position = spawnPoints[0].position;
         rlAgent.SetReady();          // Ready 플래그 ON
         rlAgent.EndEpisode();        // End → Begin 자동 호출

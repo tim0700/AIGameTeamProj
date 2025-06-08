@@ -408,7 +408,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 175257503}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 121dfbe1abcf17643a7cf693d93293c9, type: 3}
   m_Name: 
@@ -419,6 +419,75 @@ MonoBehaviour:
   detectionRange: 8
   preferredDistance: 4
   hpThreshold: 40
+--- !u!114 &175257510
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175257503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DecisionPeriod: 1
+  DecisionStep: 0
+  TakeActionsBetweenDecisions: 1
+--- !u!114 &175257511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175257503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a586a9f71a48104887d4f01dcf387d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  agentParameters:
+    maxStep: 0
+  hasUpgradedFromAgentParameters: 1
+  MaxStep: 0
+  winReward: 2
+  losePenalty: -2
+  timePenalty: -0.001
+  successfulBlockReward: 0.1
+  dodgeReward: 0.08
+  counterAttackReward: 0.05
+  hpMaintainReward: 0.001
+--- !u!114 &175257512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 175257503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_BrainParameters:
+    VectorObservationSize: 14
+    NumStackedVectorObservations: 1
+    m_ActionSpec:
+      m_NumContinuousActions: 0
+      BranchSizes: 08000000
+    VectorActionSize: 08000000
+    VectorActionDescriptions: []
+    VectorActionSpaceType: 0
+    hasUpgradedBrainParametersWithActionSpec: 1
+  m_Model: {fileID: 0}
+  m_InferenceDevice: 0
+  m_BehaviorType: 0
+  m_BehaviorName: RL_Defense
+  TeamId: 0
+  m_UseChildSensors: 1
+  m_UseChildActuators: 1
+  m_DeterministicInference: 0
+  m_ObservableAttributeHandling: 0
 --- !u!1 &176986488
 GameObject:
   m_ObjectHideFlags: 0
@@ -948,7 +1017,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 308475765}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 155420cda3c046048ae21666c2a5ea13, type: 3}
   m_Name: 
@@ -965,7 +1034,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 308475765}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
@@ -980,7 +1049,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 308475765}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04257af6eaa4869428f4715d42d42324, type: 3}
   m_Name: 
@@ -1005,7 +1074,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 308475765}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5d1c4e0b1822b495aa52bc52839ecb30, type: 3}
   m_Name: 
@@ -1478,6 +1547,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1853327000283760142, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: cea3d3b26baf6c94492e2bae38f8d346, type: 2}
     - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: agentName
       value: "\uC218\uBE44\uD615 AI"
@@ -1490,6 +1563,10 @@ PrefabInstance:
       propertyPath: attackDamage
       value: 20
       objectReference: {fileID: 0}
+    - target: {fileID: 3965526883948621051, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: cea3d3b26baf6c94492e2bae38f8d346, type: 2}
     - target: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Name
       value: Agent B
@@ -1534,6 +1611,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8100334227479349761, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: cea3d3b26baf6c94492e2bae38f8d346, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1541,6 +1622,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       insertIndex: -1
       addedObject: {fileID: 175257509}
+    - targetCorrespondingSourceObject: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 175257512}
+    - targetCorrespondingSourceObject: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 175257511}
+    - targetCorrespondingSourceObject: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 175257510}
   m_SourcePrefab: {fileID: 100100000, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
 --- !u!1 &615589844
 GameObject:
@@ -3986,11 +4076,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 86bb12c131658d74ebd4e400e4498da0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  rlAgent: {fileID: 308475777}
-  btAgent: {fileID: 175257505}
+  rlAgent: {fileID: 175257511}
+  btAgent: {fileID: 308475767}
   spawnPoints:
-  - {fileID: 1321996355}
-  - {fileID: 616053396}
+  - {fileID: 308475770}
+  - {fileID: 175257508}
   episodeTime: 60
 --- !u!4 &1966516922
 Transform:
@@ -4022,7 +4112,7 @@ PrefabInstance:
     - target: {fileID: 1853327000283760142, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: cea3d3b26baf6c94492e2bae38f8d346, type: 2}
+      objectReference: {fileID: 2100000, guid: 7208f17340dee6d4782d969519cb7400, type: 2}
     - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: agentName
       value: "\uACF5\uACA9\uD615 AI"
@@ -4033,7 +4123,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: attackRange
-      value: 0.9
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: attackDamage
@@ -4042,7 +4132,7 @@ PrefabInstance:
     - target: {fileID: 3965526883948621051, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: cea3d3b26baf6c94492e2bae38f8d346, type: 2}
+      objectReference: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
     - target: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Name
       value: Agent A
@@ -4090,7 +4180,7 @@ PrefabInstance:
     - target: {fileID: 8100334227479349761, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: cea3d3b26baf6c94492e2bae38f8d346, type: 2}
+      objectReference: {fileID: 2100000, guid: 7208f17340dee6d4782d969519cb7400, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

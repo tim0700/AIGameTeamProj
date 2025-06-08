@@ -58,6 +58,9 @@ public class BattleManager : MonoBehaviour
     {
         SetupUI();
         SetupAgents();
+
+        if (isTrainingMode)      // ML 학습용 씬이라면
+            StartBattle();
     }
 
     void Update()

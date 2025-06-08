@@ -22,9 +22,17 @@ public class RL_AttackAgent : RLAgentBase
     [Tooltip("거리 1m 멀어질 때 감산")]
     public float retreatPenalty = -0.008f;
 
+    [Tooltip("사거리 밖에서 공격 시 감산")]
+    public float outOfRangePenalty = -0.20f;          // ⬅ 인스펙터에서 조절
+
+    /* 인스펙터에 노출할 가중치 추가 */
+    [Tooltip("1m 이내로 붙었을 때 프레임당 보상")]
+    public float inRangeHoldReward = 0.02f;
+
+
     /* ─────────── 내부 상태 ─────────── */
     private float prevDist;          // 직전 프레임 적과의 거리 스냅
-    private float prevSelfHP;        // 부모에서 셋업하지만 여기서도 갱신
+    private float prevEnemyHP;        // 부모에서 셋업하지만 여기서도 갱신
 
     /* --------------------------------------------------------------------- */
     public override void OnEpisodeBegin()
@@ -37,7 +45,7 @@ public class RL_AttackAgent : RLAgentBase
                                         ctrl.enemy.transform.position);
 
         // 내 체력 스냅도 로컬 보관
-        prevSelfHP = ctrl.GetCurrentHP();
+        prevEnemyHP = ctrl.GetCurrentHP();
     }
 
     /* --------------------------------------------------------------------- */
@@ -56,32 +64,49 @@ public class RL_AttackAgent : RLAgentBase
     /* --------------------------------------------------------------------- */
     public override void OnActionReceived(ActionBuffers act)
     {
-        base.OnActionReceived(act);   // 시간 패널티·공격 성공 콜백 등 공통 처리
+        base.OnActionReceived(act);                 // 시간 패널티, 피격 패널티 등
 
-        /* ─── 1) 맞았는지 확인 ─── */
+        /* ───────── 1) 맞았는지 체크 ───────── */
         float selfHP = ctrl.GetCurrentHP();
         float lostHP = prevSelfHP - selfHP;
-
-        if (lostHP > 0f)
-            AddReward(getHitPenalty * lostHP);
-
+        if (lostHP > 0f) AddReward(getHitPenalty * lostHP);
         prevSelfHP = selfHP;
 
-        /* ─── 2) 거리 변화 보상 ─── */
         if (ctrl.enemy != null)
         {
-            float currDist = Vector3.Distance(transform.position,
-                                              ctrl.enemy.transform.position);
-            float delta = prevDist - currDist;    // +면 접근, -면 후퇴
+            Vector3 selfPos = transform.position;
+            Vector3 enemyPos = ctrl.enemy.transform.position;
 
-            if (Mathf.Abs(delta) > 0.01f)            // 1cm 이상 움직였을 때만
-            {
-                float rew = delta > 0
-                            ? delta * approachReward
-                            : -delta * retreatPenalty;   // delta < 0 ⇒ 후퇴
-                AddReward(rew);
-            }
+            float currDist = Vector3.Distance(selfPos, enemyPos);
+
+            float delta = prevDist - currDist;
+            if (delta > 0.01f) AddReward(delta * approachReward);
             prevDist = currDist;
+
+            /* ② 초근접 지수 보상 */
+            AddReward(Mathf.Exp(-8f * currDist) * 0.08f);
+
+            /* 2) 헛손질 패널티 */
+            if (act.DiscreteActions[0] == 5 && currDist > 1.2f)
+                AddReward(outOfRangePenalty);
+
+            /* ★★  여기 한 줄 추가  ── 초근접 보상 ★★ */
+            float closeBonus = Mathf.Exp(-4f * currDist) * 0.04f;  // 0.1 m ≈ +0.029
+            AddReward(closeBonus);
+
+            /* 3) 가까이 보정된 facing 보상(기존 0.005 → 0.02) */
+            Vector3 dir = (enemyPos - selfPos).normalized;
+            float facing = 1f - Vector3.Angle(transform.forward, dir) / 180f;
+            AddReward(0.04f * facing);
         }
+
+        /* 4) 멀리서 Idle 패널티  */
+        if (act.DiscreteActions[0] == 0)          // Idle
+        {
+            float dist = prevDist;                // prevDist 는 직전에 업데이트됨
+            if (dist > 1.0f)
+                AddReward(-0.07f);
+        }
+
     }
 }

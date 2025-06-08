@@ -16,7 +16,7 @@ public abstract class RLAgentBase : Agent
     public float timePenalty = -0.001f;  // 매 step 마다 부과
 
     // 내부 기록용
-    protected float prevEnemyHP;
+    protected float previousEnemyHP;
     protected float prevSelfHP;
 
     bool isReady = false;
@@ -35,7 +35,7 @@ public abstract class RLAgentBase : Agent
         if (!isReady) return;
         // RLEnvironmentManager가 위치 재배치·HP초기화 호출
         ctrl.ResetAgent();
-        prevEnemyHP = ctrl.enemy.GetCurrentHP();
+        previousEnemyHP = ctrl.enemy.GetCurrentHP();
         prevSelfHP = ctrl.GetCurrentHP();
     }
 
