@@ -32,6 +32,14 @@ public class BattleManager : MonoBehaviour
     public float autoRestartDelay = 2f;
     [Tooltip("최대 연속 전투 횟수 (0 = 무제한)")]
     public int maxTrainingEpisodes = 0;
+    
+    [Header("🆕 데이터 수집 설정")]
+    [Tooltip("CSV 데이터 수집 활성화")]
+    public bool enableDataCollection = true;
+    [Tooltip("각 에피소드마다 자동 저장")]
+    public bool autoSavePerEpisode = true;
+    [Tooltip("실시간 통계 표시")]
+    public bool showRealTimeStats = true;
 
     // ���� ����
     private bool battleActive = false;
@@ -40,6 +48,9 @@ public class BattleManager : MonoBehaviour
 
     // ������ ����
     private BattleData currentBattleData;
+    
+    // 🆕 데이터 수집 시스템
+    private EpisodeDataCollector dataCollector;
 
     [System.Serializable]
     public class BattleData
@@ -58,6 +69,9 @@ public class BattleManager : MonoBehaviour
     {
         SetupUI();
         SetupAgents();
+        
+        // 🆕 데이터 수집 시스템 초기화
+        InitializeDataCollection();
 
         if (isTrainingMode)      // ML 학습용 씬이라면
             StartBattle();
@@ -97,6 +111,51 @@ public class BattleManager : MonoBehaviour
             agentB.transform.rotation = spawnPointB.rotation;
         }
     }
+    
+    /// <summary>
+    /// 🆕 데이터 수집 시스템 초기화
+    /// </summary>
+    private void InitializeDataCollection()
+    {
+        if (!enableDataCollection)
+        {
+            Debug.Log("[🃀 BattleManager] 데이터 수집이 비활성화되어 있습니다.");
+            return;
+        }
+        
+        // EpisodeDataCollector 컬포넌트 추가/찾기
+        dataCollector = GetComponent<EpisodeDataCollector>();
+        if (dataCollector == null)
+        {
+            dataCollector = gameObject.AddComponent<EpisodeDataCollector>();
+            Debug.Log("[🃀 BattleManager] EpisodeDataCollector 컬포넌트가 자동으로 추가되었습니다.");
+        }
+        
+        // 이벤트 연결
+        dataCollector.OnEpisodeStarted += (episodeId) => 
+        {
+            if (showRealTimeStats)
+                Debug.Log($"[🃀 BattleManager] 에피소드 시작: {episodeId}");
+        };
+        
+        dataCollector.OnEpisodeCompleted += (episodeId, recordCount) => 
+        {
+            if (showRealTimeStats)
+                Debug.Log($"[🃀 BattleManager] 에피소드 완료: {episodeId} ({recordCount}개 레코드)");
+        };
+        
+        dataCollector.OnDataSaved += (filePath) => 
+        {
+            Debug.Log($"[🃀 BattleManager] CSV 데이터 저장 완료: {filePath}");
+        };
+        
+        dataCollector.OnCollectionError += (error) => 
+        {
+            Debug.LogError($"[🃀 BattleManager] 데이터 수집 오류: {error}");
+        };
+        
+        Debug.Log("[🃀 BattleManager] 데이터 수집 시스템 초기화 완료");
+    }
 
     public void StartBattle()
     {
@@ -130,6 +189,12 @@ public class BattleManager : MonoBehaviour
         if (uiManager != null)
         {
             uiManager.InitializeBattle(agentA, agentB);
+        }
+        
+        // 🆕 데이터 수집 시작
+        if (enableDataCollection && dataCollector != null)
+        {
+            dataCollector.OnBattleStarted(agentA, agentB);
         }
     }
 
@@ -252,8 +317,17 @@ public class BattleManager : MonoBehaviour
             uiManager.ShowBattleResult(winner, currentBattleData);
         }
 
-        // ������ ���� (���� CSV ���� ��� �߰� ����)
-        SaveBattleData(currentBattleData);
+        // 🆕 데이터 수집 종료 및 CSV 저장
+        if (enableDataCollection && dataCollector != null)
+        {
+            dataCollector.OnBattleEnded(winner, currentBattleData);
+        }
+        
+        // 기존 데이터 저장 (데이터 수집이 비활성화된 경우)
+        if (!enableDataCollection)
+        {
+            SaveBattleData(currentBattleData);
+        }
         
         // 🤖 ML 학습 모드에서 자동 재시작
         if (isTrainingMode)
@@ -371,6 +445,89 @@ public class BattleManager : MonoBehaviour
     public bool IsBattleActive()
     {
         return battleActive;
+    }
+    
+    /// <summary>
+    /// 🆕 데이터 수집기 통계 반환
+    /// </summary>
+    /// <returns>수집기 통계</returns>
+    public string GetDataCollectionStats()
+    {
+        if (!enableDataCollection || dataCollector == null)
+            return "데이터 수집 비활성화";
+        
+        var stats = dataCollector.GetStats();
+        return $"수집된 에피소드: {stats.totalEpisodesCollected}\n" +
+               $"저장된 레코드: {stats.totalRecordsSaved}\n" +
+               $"CSV 파일: {stats.csvFilesCount}개";
+    }
+    
+    /// <summary>
+    /// 🆕 데이터 수집 설정 업데이트
+    /// </summary>
+    /// <param name="enableCollection">데이터 수집 활성화</param>
+    /// <param name="autoSave">자동 저장</param>
+    /// <param name="showStats">실시간 통계 표시</param>
+    public void UpdateDataCollectionSettings(bool? enableCollection = null, bool? autoSave = null, bool? showStats = null)
+    {
+        if (enableCollection.HasValue)
+        {
+            enableDataCollection = enableCollection.Value;
+            
+            if (enableDataCollection && dataCollector == null)
+            {
+                InitializeDataCollection();
+            }
+        }
+        
+        if (autoSave.HasValue)
+            autoSavePerEpisode = autoSave.Value;
+            
+        if (showStats.HasValue)
+            showRealTimeStats = showStats.Value;
+            
+        Debug.Log($"[🃀 BattleManager] 데이터 수집 설정 업데이트: Collection={enableDataCollection}, AutoSave={autoSavePerEpisode}, ShowStats={showRealTimeStats}");
+    }
+    
+    /// <summary>
+    /// 🆕 수동 데이터 저장
+    /// </summary>
+    public void ManualSaveData()
+    {
+        if (enableDataCollection && dataCollector != null)
+        {
+            dataCollector.SavePendingData();
+            Debug.Log("[🃀 BattleManager] 수동 데이터 저장 완료");
+        }
+        else
+        {
+            Debug.LogWarning("[🃀 BattleManager] 데이터 수집이 비활성화되어 있습니다.");
+        }
+    }
+    
+    /// <summary>
+    /// 🆕 누적 통계 요약 반환
+    /// </summary>
+    /// <returns>누적 통계 문자열</returns>
+    public string GetCumulativeStatsForUI()
+    {
+        if (!enableDataCollection || dataCollector == null)
+            return "데이터 수집 비활성화";
+        
+        return dataCollector.GetCumulativeStatsSummary();
+    }
+    
+    /// <summary>
+    /// 🆕 에이전트별 누적 통계 반환
+    /// </summary>
+    /// <param name="agentName">에이전트 이름</param>
+    /// <returns>누적 통계</returns>
+    public string GetAgentCumulativeStats(string agentName)
+    {
+        if (!enableDataCollection || dataCollector == null)
+            return "데이터 수집 비활성화";
+        
+        return dataCollector.GetAgentCumulativeStats(agentName);
     }
 
     // ����׿� �����
