@@ -4,26 +4,31 @@ using Unity.MLAgents.Sensors;
 using UnityEngine;
 
 /// <summary>
-/// AgentController¸¦ ³»ºÎ¿¡¼­ È£ÃâÇØ RL ÇĞ½À¿ë ÀÎÅÍÆäÀÌ½º¸¦ Á¦°øÇÏ´Â º£ÀÌ½º Å¬·¡½º
+/// AgentControllerï¿½ï¿½ ï¿½ï¿½ï¿½Î¿ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½ï¿½ RL ï¿½Ğ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½Ì½ï¿½ Å¬ï¿½ï¿½ï¿½ï¿½
 /// </summary>
 [RequireComponent(typeof(AgentController))]
 public abstract class RLAgentBase : Agent
 {
-    protected AgentController ctrl;      // ÀÌ¹Ì ¿Ï¼ºµÈ ÀüÅõ ·ÎÁ÷
-    [Header("º¸»ó °¡ÁßÄ¡")]
+    protected AgentController ctrl;      // ï¿½Ì¹ï¿½ ï¿½Ï¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    [Header("ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ä¡")]
     public float winReward = 2.0f;
     public float losePenalty = -2.0f;
-    public float timePenalty = -0.001f;  // ¸Å step ¸¶´Ù ºÎ°ú
+    public float timePenalty = -0.001f;  // ï¿½ï¿½ step ï¿½ï¿½ï¿½ï¿½ ï¿½Î°ï¿½
 
-    // ³»ºÎ ±â·Ï¿ë
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ï¿ï¿½
     protected float previousEnemyHP;
     protected float prevSelfHP;
 
     bool isReady = false;
 
-    /* ¿ÜºÎ¿¡¼­ true/false ¸ğµÎ ³Ñ±æ ¼ö ÀÖ°Ô */
+    /* ï¿½ÜºÎ¿ï¿½ï¿½ï¿½ true/false ï¿½ï¿½ï¿½ ï¿½Ñ±ï¿½ ï¿½ï¿½ ï¿½Ö°ï¿½ */
     public void SetReady(bool value = true) => isReady = value;
 
+    void Update()
+    {
+        // ì •ìƒ ì†ë„ë¡œ ê°•ì œ ì„¤ì • (ë°°ì† ë°©ì§€)
+        Time.timeScale = 1.0f;
+    }
 
     public override void Initialize()
     {
@@ -33,17 +38,17 @@ public abstract class RLAgentBase : Agent
     public override void OnEpisodeBegin()
     {
         if (!isReady) return;
-        // RLEnvironmentManager°¡ À§Ä¡ Àç¹èÄ¡¡¤HPÃÊ±âÈ­ È£Ãâ
+        // RLEnvironmentManagerï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½Ä¡ï¿½ï¿½HPï¿½Ê±ï¿½È­ È£ï¿½ï¿½
         ctrl.ResetAgent();
         previousEnemyHP = ctrl.enemy.GetCurrentHP();
         prevSelfHP = ctrl.GetCurrentHP();
     }
 
-    /* ----------------- °üÃø °ø°£ ----------------- */
+    /* ----------------- ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ----------------- */
     public override void CollectObservations(VectorSensor sensor)
     {
         if (!isReady)
-        {               // ÁØºñ Àü¿£ ¸ğµÎ 0 Ã¤¿ì±â
+        {               // ï¿½Øºï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ 0 Ã¤ï¿½ï¿½ï¿½
             sensor.AddObservation(Vector3.zero);
             sensor.AddObservation(Vector3.zero);
             sensor.AddObservation(0f); sensor.AddObservation(0f);
@@ -52,8 +57,8 @@ public abstract class RLAgentBase : Agent
             return;
         }
 
-        // ¨ç ³ª¿Í ÀûÀÇ À§Ä¡(·ÎÄÃ), ¨è Ã¼·Â¡¤ÄğÅ¸ÀÓ, ¨é °æ°è±îÁö °Å¸®
-        Vector3 localPos = transform.localPosition / 15f;        // ¾Æ·¹³ª ¹İÁö¸§ 15
+        // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡(ï¿½ï¿½ï¿½ï¿½), ï¿½ï¿½ Ã¼ï¿½Â¡ï¿½ï¿½ï¿½Å¸ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½
+        Vector3 localPos = transform.localPosition / 15f;        // ï¿½Æ·ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 15
         Vector3 enemyLocalPos = ctrl.enemy.transform.localPosition / 15f;
 
         sensor.AddObservation(localPos);                // (3)
@@ -74,10 +79,10 @@ public abstract class RLAgentBase : Agent
         sensor.AddObservation(ecd.dodgeCooldown / ecd.dodgeMaxTime);
     }
 
-    /* ----------------- Çàµ¿ °ø°£ ----------------- */
+    /* ----------------- ï¿½àµ¿ ï¿½ï¿½ï¿½ï¿½ ----------------- */
     public override void OnActionReceived(ActionBuffers actions)
     {
-        // Branch 0: discrete 0~6  ¡æ Idle, F, B, L, R, Attack, Defend, Dodge
+        // Branch 0: discrete 0~6  ï¿½ï¿½ Idle, F, B, L, R, Attack, Defend, Dodge
         int act = actions.DiscreteActions[0];
 
         AgentAction a = new AgentAction();
@@ -97,23 +102,23 @@ public abstract class RLAgentBase : Agent
 
         var result = ctrl.ExecuteAction(a);
 
-        /* -------- °øÅë º¸»ó Ã³¸® -------- */
-        AddReward(timePenalty);                  // ½Ã°£ Æä³ÎÆ¼
+        /* -------- ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½ -------- */
+        AddReward(timePenalty);                  // ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½Æ¼
 
         if (result.success && result.actionType == ActionType.Attack)
             OnAttackSuccess();
 
-        //if (!result.success && result.cooldownBlocked)AddReward(-0.01f);                   // Äğ´Ù¿î Áß Àß¸øµÈ ½Ãµµ ¼Ò ¹úÁ¡
+        //if (!result.success && result.cooldownBlocked)AddReward(-0.01f);                   // ï¿½ï¿½Ù¿ï¿½ ï¿½ï¿½ ï¿½ß¸ï¿½ï¿½ï¿½ ï¿½Ãµï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-        // ½ÂÆĞ ÆÇÁ¤Àº EnvironmentManager¿¡¼­ EndEpisode È£Ãâ
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ EnvironmentManagerï¿½ï¿½ï¿½ï¿½ EndEpisode È£ï¿½ï¿½
     }
 
-    protected virtual void OnAttackSuccess() { /* °³º° ¿¡ÀÌÀüÆ®°¡ ±¸Çö */ }
+    protected virtual void OnAttackSuccess() { /* ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */ }
 
-    /* ----------------- ÈŞ¸®½ºÆ½ ----------------- */
+    /* ----------------- ï¿½Ş¸ï¿½ï¿½ï¿½Æ½ ----------------- */
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        // °£´Ü Å°º¸µå ¼öµ¿ Å×½ºÆ®¿ë(WASD+JKL), ¾ø¾îµµ µÊ
+        // ï¿½ï¿½ï¿½ï¿½ Å°ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½×½ï¿½Æ®ï¿½ï¿½(WASD+JKL), ï¿½ï¿½ï¿½îµµ ï¿½ï¿½
         var discrete = actionsOut.DiscreteActions;
         discrete[0] = 0;
         if (Input.GetKey(KeyCode.W)) discrete[0] = 1;
@@ -125,11 +130,11 @@ public abstract class RLAgentBase : Agent
         else if (Input.GetKey(KeyCode.L)) discrete[0] = 7;
     }
 
-    /* ----------------- ¿ÜºÎ¿¡¼­ È£Ãâ ----------------- */
+    /* ----------------- ï¿½ÜºÎ¿ï¿½ï¿½ï¿½ È£ï¿½ï¿½ ----------------- */
     public virtual void Win() { AddReward(winReward); EndEpisode(); }
     public virtual void Lose() { AddReward(losePenalty); EndEpisode(); }
 
-    public virtual void Draw() { EndEpisode(); }   // Áß¸³(0Á¡)À¸·Î Á¾·á
+    public virtual void Draw() { EndEpisode(); }   // ï¿½ß¸ï¿½(0ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
     public new virtual void EndEpisode()
     {
