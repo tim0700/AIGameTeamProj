@@ -248,7 +248,7 @@ public class RL_DefenseAgent : RLAgentBase
                 passivePenaltyCount++;
 
                 sr.Add("Defense/Reward/07_PassiveDistancing", passiveDistancePenalty, StatAggregationMethod.MostRecent);
-                Debug.Log("[Reward⑦] 5초간 거리 유지 → 소극적 행동 감점 -0.2");
+                Debug.Log("[Reward⑦] 5초간 거리 유지 → 소극적 행동 감점");
                 distantTimer = 0f;
             }
         }
