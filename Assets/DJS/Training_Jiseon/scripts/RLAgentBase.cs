@@ -126,6 +126,13 @@ public abstract class RLAgentBase : Agent
     }
 
     /* ----------------- 외부에서 호출 ----------------- */
-    public void Win() { AddReward(winReward); EndEpisode(); }
-    public void Lose() { AddReward(losePenalty); EndEpisode(); }
+    public virtual void Win() { AddReward(winReward); EndEpisode(); }
+    public virtual void Lose() { AddReward(losePenalty); EndEpisode(); }
+
+    public virtual void Draw() { EndEpisode(); }   // 중립(0점)으로 종료
+
+    public new virtual void EndEpisode()
+    {
+        base.EndEpisode();
+    }
 }

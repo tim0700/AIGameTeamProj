@@ -992,12 +992,11 @@ MonoBehaviour:
   winReward: 2
   losePenalty: -2
   timePenalty: -0.0005
-  damageReward: 0.18
-  getHitPenalty: -0.06
+  damageReward: 0.7
+  getHitPenalty: -0.3
   approachReward: 0.1
-  retreatPenalty: -0.03
+  retreatPenalty: -0.06
   outOfRangePenalty: -0.2
-  inRangeHoldReward: 0.3
 --- !u!114 &308475778
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1368,7 +1367,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   agentA: {fileID: 308475767}
   agentB: {fileID: 175257505}
-  maxBattleDuration: 45
+  maxBattleDuration: 90
   spawnPointA: {fileID: 1321996355}
   spawnPointB: {fileID: 616053396}
   battleStatusText: {fileID: 238325354}
@@ -3973,7 +3972,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1966516921
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3991,7 +3990,7 @@ MonoBehaviour:
   spawnPoints:
   - {fileID: 1321996355}
   - {fileID: 616053396}
-  episodeTime: 45
+  episodeTime: 90
 --- !u!4 &1966516922
 Transform:
   m_ObjectHideFlags: 0

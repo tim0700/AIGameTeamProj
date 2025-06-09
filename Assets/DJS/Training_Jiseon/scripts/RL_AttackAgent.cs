@@ -1,117 +1,124 @@
-﻿using Unity.MLAgents.Actuators;
-using UnityEngine;
+﻿using UnityEngine;
+using Unity.MLAgents;
+using Unity.MLAgents.Actuators;
+using System.IO;
 
-/// <summary>
-/// ● 공격형 PPO 학습 에이전트
-///   – 공격 성공 / 접근 보상  ↑
-///   – 피격 / 후퇴 페널티    ↓
-/// </summary>
+/*──────────────────────────────────────────────
+ *  RL_AttackAgent  (PPO + CSV 로깅)
+ *    · EndEpisode 는 손대지 않는다
+ *    · 직전 결과를 OnEpisodeBegin() 시점에 1줄 기록
+ *──────────────────────────────────────────────*/
 public class RL_AttackAgent : RLAgentBase
 {
-    /* ─────────── 인스펙터 가중치 ─────────── */
+    /*── 1. Inspector 가중치 ──*/
     [Header("보상 가중치")]
-    [Tooltip("적 HP 1 줄일 때 가산")]
     public float damageReward = 0.08f;
-
-    [Tooltip("내 HP 1 잃을 때 감산")]
     public float getHitPenalty = -0.06f;
-
-    [Tooltip("거리 1m 가까워질 때 가산")]
     public float approachReward = 0.01f;
-
-    [Tooltip("거리 1m 멀어질 때 감산")]
     public float retreatPenalty = -0.008f;
+    public float outOfRangePenalty = -0.20f;
 
-    [Tooltip("사거리 밖에서 공격 시 감산")]
-    public float outOfRangePenalty = -0.20f;          // ⬅ 인스펙터에서 조절
+    /*── 2. 내부 상태 ──*/
+    float prevDist, prevEnemyHP;
 
-    /* 인스펙터에 노출할 가중치 추가 */
-    [Tooltip("1m 이내로 붙었을 때 프레임당 보상")]
-    public float inRangeHoldReward = 0.02f;
+    /*── 3. 결과 Enum ──*/
+    enum EpResult { None, Win, Lose, Draw }
+    EpResult lastResult = EpResult.None;      // 방금 끝난 회차의 결과
 
+    /*── 4. CSV 통계 ──*/
+    static readonly string CSV =
+        Path.Combine(Application.dataPath, "Results", "rl_attack_results.csv");
+    static bool headerDone = false;
 
-    /* ─────────── 내부 상태 ─────────── */
-    private float prevDist;          // 직전 프레임 적과의 거리 스냅
-    private float prevEnemyHP;        // 부모에서 셋업하지만 여기서도 갱신
+    int epIdx = 0;
+    int atkSucc = 0;
+    int defSucc = 0;          // 공격형이라 0 유지
+    float cumRew = 0f;
+    /*────────────────── 5. Awake ──────────────────*/
+    void Awake()
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(CSV));
 
-    /* --------------------------------------------------------------------- */
+        // ① 파일이 없을 때만 헤더 작성
+        if (!File.Exists(CSV))
+            File.WriteAllText(CSV,
+              "Episode,AttackSuccess,DefenseSuccess,CumReward,Outcome\n");
+
+    }
+
+    /*────────────────── 6. Episode 시작 ──────────────────*/
     public override void OnEpisodeBegin()
     {
-        base.OnEpisodeBegin();       // RLAgentBase 초기화(HP 스냅 등)
+        /* ① 방금 끝난 에피소드 결과를 한 줄 기록 */
+        if (epIdx > 0) WriteCSV();     // 첫 회차(0)에는 쓰지 않음
 
-        // 거리 스냅샷
-        if (ctrl.enemy != null)
-            prevDist = Vector3.Distance(transform.position,
-                                        ctrl.enemy.transform.position);
+        /* ② 새 회차 초기화 */
+        ++epIdx;
+        atkSucc = defSucc = 0;
+        cumRew = 0f;
+        lastResult = EpResult.Draw;    // 기본값 = 무승부
 
-        // 내 체력 스냅도 로컬 보관
-        prevEnemyHP = ctrl.GetCurrentHP();
+        base.OnEpisodeBegin();
+
+        if (ctrl.enemy)
+        {
+            prevDist = Vector3.Distance(transform.position, ctrl.enemy.transform.position);
+            prevEnemyHP = ctrl.enemy.GetCurrentHP();
+        }
+        prevSelfHP = ctrl.GetCurrentHP();
     }
 
-    /* --------------------------------------------------------------------- */
+    /*────────────────── 7. 공격 성공 ──────────────────*/
     protected override void OnAttackSuccess()
     {
-        /* 데미지 기반 보상 */
-        float enemyHP = ctrl.enemy.GetCurrentHP();
-        float damageDone = prevEnemyHP - enemyHP;
+        atkSucc++;
 
-        if (damageDone > 0f)
-            AddReward(damageReward * damageDone);
-
-        prevEnemyHP = enemyHP;
+        float eHP = ctrl.enemy.GetCurrentHP();
+        float dmg = prevEnemyHP - eHP;
+        if (dmg > 0) AddTrReward(damageReward * dmg);
+        prevEnemyHP = eHP;
     }
 
-
-
-    /* --------------------------------------------------------------------- */
+    /*────────────────── 8. 매 Step 처리 ──────────────────*/
     public override void OnActionReceived(ActionBuffers act)
     {
-        base.OnActionReceived(act);                 // 시간 패널티, 피격 패널티 등
+        base.OnActionReceived(act);           // 시간 패널티 포함
 
-        /* ───────── 1) 맞았는지 체크 ───────── */
-        float selfHP = ctrl.GetCurrentHP();
-        float lostHP = prevSelfHP - selfHP;
-        if (lostHP > 0f) AddReward(getHitPenalty * lostHP);
-        prevSelfHP = selfHP;
+        /* (간단) 피격 페널티 */
+        float lost = prevSelfHP - ctrl.GetCurrentHP();
+        if (lost > 0) AddTrReward(getHitPenalty * lost);
+        prevSelfHP = ctrl.GetCurrentHP();
 
-        if (ctrl.enemy != null)
+        /* (요약) 거리 shaping & 헛손질 패널티 */
+        if (ctrl.enemy)
         {
-            Vector3 selfPos = transform.position;
-            Vector3 enemyPos = ctrl.enemy.transform.position;
+            Vector3 self = transform.position;
+            Vector3 enemy = ctrl.enemy.transform.position;
+            float dist = Vector3.Distance(self, enemy);
 
-            float currDist = Vector3.Distance(selfPos, enemyPos);
+            float d = prevDist - dist;
+            AddTrReward(d * (d >= 0 ? approachReward : -retreatPenalty) * 10f);
+            prevDist = dist;
 
-            float delta = prevDist - currDist;          // + : 가까워짐, – : 멀어짐
-            if (Mathf.Abs(delta) > 0.01f)
-            {
-                float stepReward = delta > 0          // 접근
-                    ? 0.10f * delta                  // +0.10 × 줄어든 m
-                    : -0.10f * (-delta);              // 후퇴엔 동등 패널티
-                AddReward(stepReward);
-            }
-            prevDist = currDist;
-
-            /* ② 초근접 지수 보상 */
-            AddReward(Mathf.Exp(-6f * currDist) * 0.08f);
-
-            if (currDist > 0.8f)           // 0.8 m 초과 구간만
-            {
-                float distPenalty = (currDist - 0.8f) * -0.02f;
-                AddReward(distPenalty);    // 멀수록 계속 손해
-            }
-
-            /* 2) 헛손질 패널티 */
-            if (act.DiscreteActions[0] == 5 && currDist > 1.2f)
-                AddReward(outOfRangePenalty);
-
-            /* 3) 가까이 보정된 facing 보상(기존 0.005 → 0.02) */
-            Vector3 dir = (enemyPos - selfPos).normalized;
-            float facing = 1f - Vector3.Angle(transform.forward, dir) / 180f;
-            AddReward(0.04f * facing);
-
-            /* 4) Idle 패널티 -- 1 m 밖에서만 손해 */
-            if (act.DiscreteActions[0] == 0 && currDist > 1.0f)
-                AddReward(-0.08f);    // 붙었는데 가만있으면 0, 멀리 Idle 은 –0.05
+            if (act.DiscreteActions[0] == 5 && dist > 1.2f)
+                AddTrReward(outOfRangePenalty);
         }
+
+        /* 승/패 판정 플래그만 세팅 → EndEpisode 호출은 RLEnvironmentManager */
+        if (ctrl.enemy && ctrl.enemy.GetCurrentHP() <= 0) lastResult = EpResult.Win;
+        else if (ctrl.GetCurrentHP() <= 0) lastResult = EpResult.Lose;
     }
+
+    /*────────────────── 9. CSV 기록 헬퍼 ──────────────────*/
+    void WriteCSV()
+    {
+        /* ❸ ElapsedSec, StepCount 열 제거 */
+        string line =
+            $"{epIdx},{atkSucc},{defSucc},{cumRew:F3},{lastResult}";
+        File.AppendAllText(CSV, line + "\n");
+
+        Debug.Log($"[CSV] Ep{epIdx} {lastResult}  R:{cumRew:F2}");
+    }
+
+    void AddTrReward(float r) { AddReward(r); cumRew += r; }
 }

@@ -236,6 +236,12 @@ public class BattleManager : MonoBehaviour
         agentA?.OnBattleEnd(resultA);
         agentB?.OnBattleEnd(resultB);
 
+        var rl = agentA.GetComponent<RLAgentBase>();   // A가 RL_AttackAgent
+        if (winner == agentA) rl?.Win();               // 승
+        else if (winner == agentB) rl?.Lose();              // 패
+        else rl?.Draw();              // 둘 다 죽음(무승부)
+
+
         // UI 결과 표시
         if (uiManager != null)
         {

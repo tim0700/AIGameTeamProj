@@ -36,16 +36,29 @@ public class RLEnvironmentManager : MonoBehaviour
     /* ───────────────── 매 프레임 루프 ───────────────── */
     void Update()
     {
-        timer -= Time.deltaTime;
+        //timer -= Time.deltaTime;
 
-        if (timer <= 0f)                     // 시간 초과 → RL 패배 처리
-            EndMatch(btAgent);
+        //if (timer <= 0f)                     // 시간 초과 → RL 패배 처리
+        //    EndMatch(btAgent);
 
-        // 승패 체크
-        if (!rlAgent.GetComponent<AgentController>().IsAlive())
-            EndMatch(btAgent);               // BT 승
-        else if (!btAgent.IsAlive())
-            EndMatch(rlAgent);               // RL 승
+        //// 승패 체크
+        //if (!rlAgent.GetComponent<AgentController>().IsAlive())
+        //    EndMatch(btAgent);               // BT 승
+        //else if (!btAgent.IsAlive())
+        //    EndMatch(rlAgent);               // RL 승
+
+        const float spawnThreshold = 0.05f;   // 허용 오차
+        bool aOnSpawn = Vector3.Distance(rlAgent.transform.position,
+                                         spawnPoints[0].position) < spawnThreshold;
+        bool bOnSpawn = Vector3.Distance(btAgent.transform.position,
+                                         spawnPoints[1].position) < spawnThreshold;
+
+        if (aOnSpawn && bOnSpawn && timer < episodeTime * 0.99f)   // 첫 Start() 직후는 제외
+        {
+            ResetEpisode();
+            return;                         // 중복 검사 방지
+        }
+
     }
 
     /* ───────────────── RL 쪽만 리셋 ───────────────── */
