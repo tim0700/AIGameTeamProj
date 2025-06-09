@@ -4356,7 +4356,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -4291572279194538355, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Height
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: -4291572279194538355, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Enabled
@@ -4365,7 +4365,7 @@ PrefabInstance:
     - target: {fileID: 1853327000283760142, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 7208f17340dee6d4782d969519cb7400, type: 2}
+      objectReference: {fileID: 2100000, guid: 3fd024a7e189e724e90b7d16b1c944b8, type: 2}
     - target: {fileID: 3038131008529166074, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: agentName
       value: "\uACF5\uACA9\uD615 AI"
@@ -4385,7 +4385,7 @@ PrefabInstance:
     - target: {fileID: 3965526883948621051, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+      objectReference: {fileID: 2100000, guid: 3fd024a7e189e724e90b7d16b1c944b8, type: 2}
     - target: {fileID: 7025852280104874317, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: m_Name
       value: Agent A
@@ -4433,7 +4433,7 @@ PrefabInstance:
     - target: {fileID: 8100334227479349761, guid: de5641b6c4d64b2468ef102f06b2e8e2, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
-      objectReference: {fileID: 2100000, guid: 7208f17340dee6d4782d969519cb7400, type: 2}
+      objectReference: {fileID: 2100000, guid: 3fd024a7e189e724e90b7d16b1c944b8, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
