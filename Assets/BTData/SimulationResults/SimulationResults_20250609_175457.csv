@@ -1,0 +1,1 @@
+﻿Timestamp,EpisodeId,AgentName,AgentType,WinResult,FinalHP,InitialHP,BattleDuration,TotalActions,AverageExecutionTime,EnemyAgentName,AttackAttempts,AttackSuccesses,DefenseAttempts,DefenseSuccesses,DodgeAttempts,DodgeSuccesses,AttackSuccessRate,DefenseSuccessRate,DodgeSuccessRate,CumulativeRounds,CumulativeWins,WinPercentage
