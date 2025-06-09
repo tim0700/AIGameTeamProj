@@ -573,7 +573,7 @@ public class AgentController : MonoBehaviour
             // WeaponDamage 컴포넌트에서 데미지 정보 가져오기
             WeaponDamage weaponDmg = other.GetComponent<WeaponDamage>();
             float damage = 20f; // 기본 데미지 (fallback)
-            
+
             if (weaponDmg != null)
             {
                 damage = weaponDmg.GetDamage();
@@ -581,6 +581,16 @@ public class AgentController : MonoBehaviour
                 if (attacker != null)
                 {
                     Debug.Log($"[AgentController] {attacker.GetAgentName()}이(가) {agentName}을(를) 공격! 데미지: {damage}");
+                }
+
+                //익준 수비 에이전트 방어 성공 보상 알리기 관련코드
+                if (GetCurrentState() == AgentState.Defending)
+                {
+                    // RL_DefenseAgent가 붙어있는 경우에만
+                    if (TryGetComponent<RL_DefenseAgent>(out var rlDef))
+                    {
+                        rlDef.OnDefenseSuccess();
+                    }
                 }
             }
             else

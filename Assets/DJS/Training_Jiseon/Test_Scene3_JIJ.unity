@@ -453,10 +453,15 @@ MonoBehaviour:
   winReward: 2
   losePenalty: -2
   timePenalty: -0.001
-  successfulBlockReward: 0.1
-  dodgeReward: 0.08
-  counterAttackReward: 0.05
-  hpMaintainReward: 0.001
+  successfulBlockReward: 0.5
+  dodgeReward: 0.2
+  counterAttackReward: 0.2
+  counterAfterDodgeReward: 0.3
+  hpMaintainReward: 0.01
+  counterAfterSkillReward: 0.4
+  passiveDistancePenalty: -0.1
+  consecutiveBlockReward: 0.5
+  approachRewardBase: 0.01
 --- !u!114 &175257512
 MonoBehaviour:
   m_ObjectHideFlags: 0
