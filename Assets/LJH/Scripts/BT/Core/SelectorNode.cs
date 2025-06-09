@@ -2,6 +2,10 @@ using System.Collections.Generic;
 
 namespace LJH.BT
 {
+    /// <summary>
+    /// Selector 노드 - 자식 노드들 중 하나라도 성공하면 성공 (OR 논리)
+    /// 자식 노드들을 순차적으로 실행하다가 성공하는 노드가 있으면 중단
+    /// </summary>
     public class SelectorNode : BTNode
     {
         private List<BTNode> children;

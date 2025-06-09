@@ -1,5 +1,8 @@
 using UnityEngine;
 
+/// <summary>
+/// 무기의 데미지와 소유자 정보를 관리하는 클래스
+/// </summary>
 public class WeaponDamage : MonoBehaviour
 {
     [Header("무기 데미지 정보")]

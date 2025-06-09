@@ -1,34 +1,38 @@
 using UnityEngine;
 
+/// <summary>
+/// ë°°í‹€ ì—ì´ì „íŠ¸ê°€ êµ¬í˜„í•´ì•¼ í•˜ëŠ” ê¸°ë³¸ ì¸í„°í˜ì´ìŠ¤
+/// ëª¨ë“  AI ì—ì´ì „íŠ¸(BT, RL ë“±)ëŠ” ì´ ì¸í„°í˜ì´ìŠ¤ë¥¼ êµ¬í˜„í•´ì•¼ í•¨
+/// </summary>
 public interface IBattleAgent
 {
     /// <summary>
-    /// ÇöÀç »óÈ²À» °üÂûÇÏ°í ´ÙÀ½ Çàµ¿À» °áÁ¤
+    /// í˜„ì¬ ìƒí™©ì„ ê´€ì°°í•˜ê³  ë‹¤ìŒ í–‰ë™ì„ ê²°ì •
     /// </summary>
     AgentAction DecideAction(GameObservation observation);
 
     /// <summary>
-    /// Çàµ¿ °á°ú¸¦ ¹Ş¾Æ¼­ ÇĞ½À/Á¶Á¤
+    /// í–‰ë™ ê²°ê³¼ë¥¼ ë°›ì•„ì„œ í•™ìŠµ/ë¶„ì„
     /// </summary>
     void OnActionResult(ActionResult result);
 
     /// <summary>
-    /// ¿¡ÇÇ¼Òµå(ÀüÅõ) Á¾·á ½Ã È£Ãâ
+    /// ì—í”¼ì†Œë“œ(ê²Œì„) ì¢…ë£Œ ì‹œ í˜¸ì¶œ
     /// </summary>
     void OnEpisodeEnd(EpisodeResult result);
 
     /// <summary>
-    /// ¿¡ÀÌÀüÆ® ÃÊ±âÈ­ (ÄÁÆ®·Ñ·¯ ¿¬°á)
+    /// ì—ì´ì „íŠ¸ ì´ˆê¸°í™” (ì»¨íŠ¸ë¡¤ëŸ¬ ì„¤ì •)
     /// </summary>
     void Initialize(AgentController controller);
 
     /// <summary>
-    /// ¿¡ÀÌÀüÆ® ÀÌ¸§
+    /// ì—ì´ì „íŠ¸ ì´ë¦„
     /// </summary>
     string GetAgentName();
 
     /// <summary>
-    /// ¿¡ÀÌÀüÆ® Å¸ÀÔ (BT, RL µî)
+    /// ì—ì´ì „íŠ¸ íƒ€ì… (BT, RL ë“±)
     /// </summary>
     string GetAgentType();
 }

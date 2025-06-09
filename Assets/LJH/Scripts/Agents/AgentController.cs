@@ -5,7 +5,7 @@ using System.Collections;
 [RequireComponent(typeof(Rigidbody))]
 public class AgentController : MonoBehaviour
 {
-    [Header("������Ʈ ����")]
+    [Header("에이전트 설정")]
     public string agentName = "BT Agent";
     public IBattleAgent agent;
 

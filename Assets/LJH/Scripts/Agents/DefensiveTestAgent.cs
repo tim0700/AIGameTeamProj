@@ -1,15 +1,18 @@
 using UnityEngine;
 
+/// <summary>
+/// ë°©ì–´ì ì¸ í…ŒìŠ¤íŠ¸ ì—ì´ì „íŠ¸ - TestAgentë¥¼ ìƒì†ë°›ì•„ ë°©ì–´ì„±ì„ ë†’ì„
+/// </summary>
 public class DefensiveTestAgent : TestAgent
 {
     void Start()
     {
-        aggressionLevel = 0.3f; // ¼öºñÀû
-        actionDelay = 1.2f;     // ½ÅÁßÇÑ Çàµ¿
-        agentName = "¼öºñÇü AI";
+        aggressionLevel = 0.3f; // ë°©ì–´ì 
+        actionDelay = 1.2f;     // ì‹ ì¤‘í•œ í–‰ë™
+        agentName = "ë°©ì–´í˜• AI";
     }
 
-    public override string GetAgentName() => "¼öºñÇü AI";
+    public override string GetAgentName() => "ë°©ì–´í˜• AI";
 
     public override string GetAgentType() => "Defensive AI";
 }

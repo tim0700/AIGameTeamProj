@@ -2,6 +2,10 @@ using System.Collections.Generic;
 
 namespace LJH.BT
 {
+    /// <summary>
+    /// Sequence 노드 - 모든 자식 노드가 성공해야 성공 (AND 논리)
+    /// 자식 노드들을 순차적으로 실행하다가 실패하는 노드가 있으면 중단
+    /// </summary>
     public class SequenceNode : BTNode
     {
         private List<BTNode> children;

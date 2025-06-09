@@ -1,5 +1,9 @@
 using UnityEngine;
 
+/// <summary>
+/// 게임 상황을 관찰할 수 있는 데이터 구조체
+/// 에이전트가 의사 결정을 내리기 위해 필요한 모든 정보
+/// </summary>
 [System.Serializable]
 public struct GameObservation
 {
@@ -14,6 +18,9 @@ public struct GameObservation
     public float arenaRadius;
 }
 
+/// <summary>
+/// 에이전트가 수행할 행동을 정의하는 구조체
+/// </summary>
 [System.Serializable]
 public struct AgentAction
 {
@@ -41,6 +48,9 @@ public struct AgentAction
     }
 }
 
+/// <summary>
+/// 에이전트의 각 행동에 대한 쿨다운 상태를 관리
+/// </summary>
 [System.Serializable]
 public struct CooldownState
 {
@@ -56,6 +66,9 @@ public struct CooldownState
     public bool CanDodge => dodgeCooldown <= 0f;
 }
 
+/// <summary>
+/// 행동 실행 결과를 나타내는 구조체
+/// </summary>
 [System.Serializable]
 public struct ActionResult
 {
@@ -73,7 +86,7 @@ public struct ActionResult
             success = true,
             actionType = type,
             damage = damage,
-            message = $"{type} ����"
+            message = $"{type} 성공"
         };
     }
 
@@ -88,6 +101,9 @@ public struct ActionResult
     }
 }
 
+/// <summary>
+/// 한 에피소드(배틀) 종료 시 결과를 나타내는 구조체
+/// </summary>
 [System.Serializable]
 public struct EpisodeResult
 {
